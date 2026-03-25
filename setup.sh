@@ -102,7 +102,7 @@ echo ""
 # Add submodule if not already present
 if [ ! -d ".dev-standards" ]; then
   echo "  Adding submodule..."
-  git submodule add git@github.com:flowty/dev-standards.git .dev-standards
+  git submodule add https://github.com/flowty/dev-standards.git .dev-standards
 else
   echo "  .dev-standards/ already exists, skipping submodule add."
 fi

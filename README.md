@@ -21,7 +21,7 @@ Shared development standards, hooks, and tooling for Claude Code projects. Added
 From your project's root directory, add the submodule and run setup:
 
 ```bash
-git submodule add git@github.com:flowty/dev-standards.git .dev-standards
+git submodule add https://github.com/flowty/dev-standards.git .dev-standards
 .dev-standards/setup.sh
 ```
 
