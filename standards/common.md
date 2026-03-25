@@ -60,6 +60,22 @@ When implementing from papers, pseudocode, or open-source references:
 - If the reference has edge cases or special handling, implement them — don't simplify them away.
 - When in doubt, be faithful to the reference and let tests verify correctness.
 
+## Common Mistakes
+
+Lessons from recurring Claude errors. When you catch a new pattern, add it here.
+
+### Behavioral
+- **Don't add unrequested features.** If the user asked for X, deliver X — not X plus "helpful" extras.
+- **Don't refactor surrounding code.** A bug fix doesn't need adjacent code cleaned up.
+- **Don't skip tests to move faster.** Run the test suite even when changes seem trivial.
+- **Don't silently change approach.** If something isn't working, say so — don't quietly try a different strategy.
+
+### Technical
+- **Don't invent APIs — verify they exist.** Check that functions, flags, and methods actually exist before using them.
+- **Don't ignore type errors.** If mypy/clang-tidy flags something, fix the root cause — don't suppress or work around it.
+- **Don't use deprecated patterns.** Check current docs, not training data. Prefer modern idioms.
+- **Read before writing.** Always read a file before modifying it. Don't guess at existing code structure.
+
 ## General Principles
 
 - Don't over-engineer. Avoid unnecessary abstractions, features, or error handling beyond what's needed.
