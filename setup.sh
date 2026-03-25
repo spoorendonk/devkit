@@ -71,12 +71,10 @@ if ! git rev-parse --git-dir &>/dev/null; then
   exit 1
 fi
 
-# Project name
-read -p "  Project name: " PROJECT_NAME
-if [ -z "$PROJECT_NAME" ]; then
-  echo "Error: project name is required."
-  exit 1
-fi
+# Project name (default to current directory/repo name)
+DEFAULT_PROJECT_NAME=$(basename "$(pwd)")
+read -p "  Project name [$DEFAULT_PROJECT_NAME]: " PROJECT_NAME
+PROJECT_NAME="${PROJECT_NAME:-$DEFAULT_PROJECT_NAME}"
 
 # Project type
 echo ""
