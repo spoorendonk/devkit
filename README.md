@@ -18,10 +18,29 @@ Shared development standards, hooks, and tooling for Claude Code projects. Added
 
 ### Add to an existing project
 
-From your project's root directory:
+From your project's root directory, add the submodule and run setup:
 
 ```bash
+git submodule add git@github.com:flowty/dev-standards.git .dev-standards
 .dev-standards/setup.sh
+```
+
+> **Note:** The setup script also adds the submodule if `.dev-standards/` doesn't exist yet, so you can run `setup.sh` directly if you've already cloned the repo locally. But the above is the standard approach.
+
+### Cloning a project that already uses dev-standards
+
+When you clone a repo that has dev-standards as a submodule, the `.dev-standards/` directory will be empty by default. Initialize it with:
+
+```bash
+git clone <your-repo-url>
+cd <your-repo>
+git submodule update --init
+```
+
+Or clone with submodules in one step:
+
+```bash
+git clone --recurse-submodules <your-repo-url>
 ```
 
 The setup script will:
