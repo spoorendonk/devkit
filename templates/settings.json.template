@@ -3,6 +3,7 @@
   "permissions": {
     "allow": [
       "Bash(git *)",
+      "Bash(gh *)",
       "Bash(cmake *)",
       "Bash(ctest *)",
       "Bash(make *)",
