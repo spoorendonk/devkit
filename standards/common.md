@@ -21,6 +21,14 @@ Trunk-based development with linear history on main. No PRs — merge directly w
 - Use rebase or squash merge to maintain linear history — no merge commits on main.
 - Before creating any branch, run `git branch --show-current` and confirm you're on main.
 
+## Commit Messages
+
+Use Conventional Commits. The commit-msg hook enforces the format.
+
+- Format: `type: description` or `type(scope): description`
+- Types: `feat`, `fix`, `refactor`, `test`, `docs`, `style`, `perf`, `chore`, `build`, `ci`
+- Subject line max 72 characters. Focus on **why**, not what (the diff shows what).
+
 ## CLAUDE.md Discipline
 
 - When Claude gets something wrong, fix CLAUDE.md in the same commit — this is the core feedback loop.
