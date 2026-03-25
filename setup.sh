@@ -118,6 +118,9 @@ if offer_file "$CLAUDE_MD_TMP" "CLAUDE.md" "CLAUDE.md ($TEMPLATE)"; then
 fi
 rm -f "$CLAUDE_MD_TMP"
 
+# AGENTS.md symlink for other AI tools (Codex, Cursor, Copilot)
+ln -sf CLAUDE.md AGENTS.md
+
 # settings.json
 if offer_file "$SCRIPT_DIR/templates/settings.json.template" ".claude/settings.json" ".claude/settings.json"; then
   cp "$SCRIPT_DIR/templates/settings.json.template" .claude/settings.json
@@ -198,6 +201,6 @@ echo ""
 echo "  Done. Next steps:"
 echo "    1. Open a Claude Code session in this project"
 echo "    2. Run /init to auto-detect project details and flesh out CLAUDE.md"
-echo "    3. Commit: git add CLAUDE.md .claude/ .dev-standards .gitmodules"
+echo "    3. Commit: git add CLAUDE.md AGENTS.md .claude/ .dev-standards .gitmodules"
 echo "    4. Run /start to begin your first session"
 echo ""
