@@ -62,11 +62,21 @@
   "hooks": {
     "PostToolUse": [
       {
-        "command": "bash .dev-standards/hooks/post-tool-format.sh",
-        "event": "Write|Edit"
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .dev-standards/hooks/post-tool-format.sh"
+          }
+        ]
       },
       {
-        "command": "bash .dev-standards/hooks/check-pending-review.sh"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .dev-standards/hooks/check-pending-review.sh"
+          }
+        ]
       }
     ],
     "PreToolUse": [
