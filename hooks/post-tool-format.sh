@@ -17,6 +17,13 @@ case "$EXT" in
     fi
     ;;
 
+  sh|bash)
+    # Auto-format shell scripts (non-blocking)
+    if command -v shfmt &>/dev/null; then
+      shfmt -w "$FILE"
+    fi
+    ;;
+
   py)
     # Auto-format Python (non-blocking)
     if command -v ruff &>/dev/null; then

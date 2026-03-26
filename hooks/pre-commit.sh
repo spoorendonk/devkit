@@ -13,6 +13,7 @@ STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null || tr
 
 CPP_FILES=$(echo "$STAGED_FILES" | grep -E '\.(cpp|cc|cxx|h|hpp|hxx)$' || true)
 PY_FILES=$(echo "$STAGED_FILES" | grep -E '\.py$' || true)
+SH_FILES=$(echo "$STAGED_FILES" | grep -E '\.sh$' || true)
 
 # ============================================================
 # Step 1: Auto-format and auto-fix
@@ -21,6 +22,11 @@ PY_FILES=$(echo "$STAGED_FILES" | grep -E '\.py$' || true)
 # C++ formatting
 if [ -n "$CPP_FILES" ] && command -v clang-format &>/dev/null; then
   clang-format -i $CPP_FILES || true
+fi
+
+# Shell script formatting
+if [ -n "$SH_FILES" ] && command -v shfmt &>/dev/null; then
+  shfmt -w $SH_FILES || true
 fi
 
 # Python formatting + auto-fixable lint

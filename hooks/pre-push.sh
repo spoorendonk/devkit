@@ -20,6 +20,7 @@ CHANGED_FILES=$(git diff --name-only "origin/$MAIN_BRANCH"...HEAD 2>/dev/null ||
 
 CPP_FILES=$(echo "$CHANGED_FILES" | grep -E '\.(cpp|cc|cxx|h|hpp|hxx)$' || true)
 PY_FILES=$(echo "$CHANGED_FILES" | grep -E '\.py$' || true)
+SH_FILES=$(echo "$CHANGED_FILES" | grep -E '\.sh$' || true)
 
 # ============================================================
 # Step 1: Review check (warn if /review not run)
@@ -83,6 +84,17 @@ if [ -n "$PY_FILES" ] && command -v ruff &>/dev/null; then
     [ -f "$f" ] || continue
     RESULT=$(ruff check --select C901 --no-fix "$f" 2>&1 || true)
     if [ -n "$RESULT" ] && ! echo "$RESULT" | grep -q "^All checks passed"; then
+      ISSUES="${ISSUES}${RESULT}"$'\n'
+    fi
+  done
+fi
+
+# shellcheck warnings
+if [ -n "$SH_FILES" ] && command -v shellcheck &>/dev/null; then
+  for f in $SH_FILES; do
+    [ -f "$f" ] || continue
+    RESULT=$(shellcheck "$f" 2>&1 || true)
+    if [ -n "$RESULT" ]; then
       ISSUES="${ISSUES}${RESULT}"$'\n'
     fi
   done
