@@ -50,7 +50,9 @@
       "Bash(* --version)",
       "Bash(* --help)",
       "Read",
-      "Edit"
+      "Edit",
+      "WebSearch",
+      "WebFetch"
     ],
     "deny": [
       "Bash(rm -rf /*)",
