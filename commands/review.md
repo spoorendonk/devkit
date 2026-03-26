@@ -1,4 +1,11 @@
-Run a multi-agent code review on all changes vs main. Follow these steps exactly:
+Run a multi-agent code review on all changes vs main. Follow these steps exactly.
+
+## Options (from $ARGUMENTS)
+
+- `--quick`: Do the review directly (no agents). Faster, less thorough.
+- `--stamp`: Skip the review entirely — just write the current HEAD to `.claude/.last-review`. Use when you've already reviewed manually.
+
+If `--stamp` is passed, skip directly to the final step (mark review complete).
 
 ## Step 1: Sync with remote and determine diff base
 
@@ -35,16 +42,18 @@ If there are no changes vs the diff base, report that and stop.
 
 Read the project's standards files (the ones imported via `@.dev-std/standards/` in CLAUDE.md) so reviewers know what conventions to check against.
 
-## Step 4: Spawn 3 independent review agents in parallel
+## Step 4: Review
 
-Launch 3 review agents simultaneously using the Agent tool. Each agent does a **full, independent review** of everything — correctness, style, tests, cleanliness. They are not split by domain. Think of them as 3 different team members each reviewing the same code.
+**If `--quick`:** Do the review yourself directly — no agents. Read the full source files (not just the diff) for context. Produce findings and skip to step 6.
+
+**Otherwise:** Launch **3** agents simultaneously using the Agent tool. Each agent does a **full, independent review** of everything — correctness, style, tests, cleanliness. They are not split by domain. Think of them as different team members each reviewing the same code.
 
 Each agent receives:
 - The full diff from Step 2
 - The relevant source files (not just the diff — read the full files for context)
 - The standards from Step 3
 
-Each agent should review for:
+Review for:
 - Logic bugs, edge cases, error handling gaps
 - Adherence to project standards (naming, style, conventions)
 - Test coverage gaps and test quality
@@ -53,7 +62,7 @@ Each agent should review for:
 
 Each agent returns a structured list of findings with: file, line, issue, severity (nit vs major), and suggested fix.
 
-## Step 5: Consolidate findings (orchestrator)
+## Step 5: Consolidate findings
 
 After all 3 agents complete, act as the orchestrator:
 1. Merge all findings from the 3 reviewers
