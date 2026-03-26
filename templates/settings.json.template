@@ -3,6 +3,13 @@
   "permissions": {
     "allow": [
       "Bash(*)",
+      "Bash(*>*)",
+      "Bash(*>>*)",
+      "Bash(*<<*)",
+      "Bash(*<*)",
+      "Bash(*|*)",
+      "Bash(*&&*)",
+      "Bash(*;*)",
       "Read(*)",
       "Edit(*)",
       "WebSearch",
