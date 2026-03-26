@@ -28,8 +28,8 @@ SH_FILES=$(echo "$CHANGED_FILES" | grep -E '\.sh$' || true)
 REVIEW_STALE=0
 CURRENT_HEAD=$(git rev-parse HEAD 2>/dev/null)
 
-if [ -f ".claude/.last-review" ]; then
-  LAST_REVIEWED=$(cat .claude/.last-review | tr -d '[:space:]')
+if [ -f ".dev-std/.last-review" ]; then
+  LAST_REVIEWED=$(cat .dev-std/.last-review | tr -d '[:space:]')
   if [ "$LAST_REVIEWED" != "$CURRENT_HEAD" ]; then
     COMMITS_SINCE=$(git rev-list --count "$LAST_REVIEWED..$CURRENT_HEAD" 2>/dev/null || echo "?")
     echo ""
@@ -200,6 +200,6 @@ else
 fi
 
 # Clean up review stamp so next changes require a fresh review
-rm -f .claude/.last-review
+rm -f .dev-std/.last-review
 
 exit 0

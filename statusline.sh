@@ -116,8 +116,8 @@ fi
 review_status=""
 if git -C "$cwd" rev-parse --git-dir > /dev/null 2>&1; then
     current_head=$(git -C "$cwd" rev-parse HEAD 2>/dev/null)
-    if [ -f "$cwd/.claude/.last-review" ]; then
-        last_reviewed=$(cat "$cwd/.claude/.last-review" | tr -d '[:space:]')
+    if [ -f "$cwd/.dev-std/.last-review" ]; then
+        last_reviewed=$(cat "$cwd/.dev-std/.last-review" | tr -d '[:space:]')
         if [ "$last_reviewed" = "$current_head" ]; then
             review_status="ok"
         else
