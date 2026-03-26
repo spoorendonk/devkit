@@ -3,10 +3,9 @@
 # Final gate before sharing code — catches what pre-commit doesn't.
 #
 # Flow:
-#   1. Review check → warn if /review not run
-#   2. Remaining issues (complexity, type errors, warnings) → warn and continue
-#
-# Formatting, lint fixes, and tests run at pre-commit time.
+#   1. Review check → block if /review not run
+#   2. Clean build + test → block on failure
+#   3. Remaining issues (complexity, type errors, warnings) → warn and continue
 
 set -e
 
@@ -23,7 +22,7 @@ PY_FILES=$(echo "$CHANGED_FILES" | grep -E '\.py$' || true)
 SH_FILES=$(echo "$CHANGED_FILES" | grep -E '\.sh$' || true)
 
 # ============================================================
-# Step 1: Review check (warn if /review not run)
+# Step 1: Review check (block if /review not run)
 # ============================================================
 
 REVIEW_STALE=0
@@ -52,7 +51,80 @@ if [ "$REVIEW_STALE" -ne 0 ]; then
 fi
 
 # ============================================================
-# Step 2: Remaining issues (warn and continue)
+# Step 2: Clean build + test (hard block)
+# ============================================================
+
+# Extract a fenced code block under "## Build & Test" by tag (e.g. ```build ... ```)
+extract_block() {
+  local tag="$1"
+  if [ -f "CLAUDE.md" ]; then
+    sed -n '/^## Build & Test/,/^## /{' \
+      -e "/^\`\`\`${tag}$/,/^\`\`\`$/{ /^\`\`\`/d; p; }" \
+      -e '}' CLAUDE.md
+  fi
+}
+
+BUILD_FAILED=0
+CLEAN_CMD=$(extract_block clean)
+BUILD_CMD=$(extract_block build)
+TEST_CMD=$(extract_block test)
+
+if [ -n "$BUILD_CMD" ] || [ -n "$TEST_CMD" ]; then
+  # Use commands from CLAUDE.md
+  if [ -n "$CLEAN_CMD" ]; then
+    echo ""
+    echo "=== Clean ==="
+    set +e; eval "$CLEAN_CMD"; rc=$?; set -e
+    if [ "$rc" -ne 0 ]; then BUILD_FAILED=1; fi
+  fi
+  if [ -n "$BUILD_CMD" ] && [ "$BUILD_FAILED" -eq 0 ]; then
+    echo ""
+    echo "=== Build ==="
+    set +e; eval "$BUILD_CMD"; rc=$?; set -e
+    if [ "$rc" -ne 0 ]; then BUILD_FAILED=1; fi
+  fi
+  if [ -n "$TEST_CMD" ] && [ "$BUILD_FAILED" -eq 0 ]; then
+    echo ""
+    echo "=== Test ==="
+    set +e; eval "$TEST_CMD"; rc=$?; set -e
+    if [ "$rc" -ne 0 ]; then BUILD_FAILED=1; fi
+  fi
+else
+  # Auto-detect from project files
+  if [ -f "CMakeLists.txt" ] && command -v cmake &>/dev/null; then
+    echo ""
+    echo "=== Clean build + test (C++) ==="
+    rm -rf build
+    if cmake -B build && cmake --build build -j"$(nproc 2>/dev/null || echo 4)"; then
+      if command -v ctest &>/dev/null; then
+        if ! ctest --test-dir build --output-on-failure -j"$(nproc 2>/dev/null || echo 4)"; then
+          BUILD_FAILED=1
+        fi
+      fi
+    else
+      BUILD_FAILED=1
+    fi
+  fi
+
+  if [ -f "pyproject.toml" ] || [ -f "setup.py" ]; then
+    if command -v pytest &>/dev/null; then
+      echo ""
+      echo "=== Running tests (Python) ==="
+      if ! pytest --tb=short -q; then
+        BUILD_FAILED=1
+      fi
+    fi
+  fi
+fi
+
+if [ "$BUILD_FAILED" -ne 0 ]; then
+  echo ""
+  echo "Push blocked: build or tests failed."
+  exit 1
+fi
+
+# ============================================================
+# Step 3: Remaining issues (warn and continue)
 # ============================================================
 
 ISSUES=""

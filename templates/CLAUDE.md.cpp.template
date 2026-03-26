@@ -1,3 +1,17 @@
 @.dev-std/standards/cpp.md
 
 # Project: __PROJECT_NAME__
+
+## Build & Test
+
+```clean
+rm -rf build
+```
+
+```build
+cmake -B build && cmake --build build -j$(nproc)
+```
+
+```test
+ctest --test-dir build --output-on-failure -j$(nproc)
+```

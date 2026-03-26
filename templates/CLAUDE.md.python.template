@@ -1,3 +1,9 @@
 @.dev-std/standards/python.md
 
 # Project: __PROJECT_NAME__
+
+## Build & Test
+
+```test
+pytest --tb=short -q
+```
