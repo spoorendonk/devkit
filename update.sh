@@ -1,6 +1,6 @@
 #!/bin/bash
-# Non-interactive update of dev-standards files in the current project.
-# Run from project root, or via /update-dev-standards in Claude.
+# Non-interactive update of dev-std files in the current project.
+# Run from project root, or via /update-dev-std in Claude.
 
 set -e
 
@@ -17,13 +17,13 @@ install_hook() {
 }
 
 echo ""
-echo "  dev-standards update"
+echo "  dev-std update"
 echo "  ─────────────────────"
 echo ""
 
 # Pull latest submodule
 echo "  Pulling latest submodule..."
-git submodule update --remote .dev-standards
+git submodule update --remote .dev-std
 echo ""
 
 # Slash commands (always overwrite)

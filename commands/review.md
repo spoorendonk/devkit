@@ -33,7 +33,7 @@ If there are no changes vs main, report that and stop.
 
 ## Step 4: Read the standards
 
-Read the project's standards files (the ones imported via `@.dev-standards/standards/` in CLAUDE.md) so reviewers know what conventions to check against.
+Read the project's standards files (the ones imported via `@.dev-std/standards/` in CLAUDE.md) so reviewers know what conventions to check against.
 
 ## Step 5: Spawn 3 independent review agents in parallel
 

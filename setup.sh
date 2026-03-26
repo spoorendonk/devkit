@@ -1,5 +1,5 @@
 #!/bin/bash
-# Interactive setup script for dev-standards.
+# Interactive setup script for dev-std.
 # Run from a project repo root.
 
 set -e
@@ -73,11 +73,11 @@ install_hook() {
   fi
 }
 
-# Helper: offer to symlink a config file from .dev-standards
+# Helper: offer to symlink a config file from .dev-std
 # Usage: offer_symlink <filename> <config-subpath>
 offer_symlink() {
   local name="$1"
-  local target=".dev-standards/config/$1"
+  local target=".dev-std/config/$1"
 
   if [ ! -f "$name" ]; then
     echo "  Symlinking $name..."
@@ -104,7 +104,7 @@ offer_symlink() {
 }
 
 echo ""
-echo "  dev-standards setup"
+echo "  dev-std setup"
 echo "  ─────────────────────"
 echo ""
 
@@ -141,11 +141,11 @@ esac
 echo ""
 
 # Add submodule if not already present
-if [ ! -d ".dev-standards" ]; then
+if [ ! -d ".dev-std" ]; then
   echo "  Adding submodule..."
-  git submodule add https://github.com/flowty/dev-standards.git .dev-standards
+  git submodule add https://github.com/flowty/dev-std.git .dev-std
 else
-  echo "  .dev-standards/ already exists, skipping submodule add."
+  echo "  .dev-std/ already exists, skipping submodule add."
 fi
 
 # Create .claude directory
@@ -195,6 +195,6 @@ echo ""
 echo "  Done. Next steps:"
 echo "    1. Open a Claude Code session in this project"
 echo "    2. Run /init to auto-detect project details and flesh out CLAUDE.md"
-echo "    3. Commit: git add CLAUDE.md AGENTS.md .claude/ .dev-standards .gitmodules"
+echo "    3. Commit: git add CLAUDE.md AGENTS.md .claude/ .dev-std .gitmodules"
 echo "    4. Run /start to begin your first session"
 echo ""
