@@ -114,4 +114,8 @@ else
   echo ""
   echo "All checks passed."
 fi
+
+# Clean up review stamp so next changes require a fresh review
+rm -f .claude/.last-review
+
 exit 0
