@@ -116,9 +116,7 @@ fi
 review_status=""
 if git -C "$cwd" rev-parse --git-dir > /dev/null 2>&1; then
     current_head=$(git -C "$cwd" rev-parse HEAD 2>/dev/null)
-    if [ -f "$cwd/.claude/.pending-review" ]; then
-        review_status="pending"
-    elif [ -f "$cwd/.claude/.last-review" ]; then
+    if [ -f "$cwd/.claude/.last-review" ]; then
         last_reviewed=$(cat "$cwd/.claude/.last-review" | tr -d '[:space:]')
         if [ "$last_reviewed" = "$current_head" ]; then
             review_status="ok"
@@ -179,7 +177,7 @@ if [ -n "$review_status" ]; then
         ok)
             parts+=("$(printf "${label}review:${reset}\033[00;32m%s\033[00m" "$review_status")")
             ;;
-        none|pending)
+        none)
             parts+=("$(printf "${label}review:${reset}\033[01;31m%s\033[00m" "$review_status")")
             ;;
         *)

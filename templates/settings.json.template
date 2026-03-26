@@ -79,14 +79,6 @@
             "command": "bash .dev-std/hooks/post-tool-format.sh"
           }
         ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash .dev-std/hooks/check-pending-review.sh"
-          }
-        ]
       }
     ],
     "PreToolUse": [
