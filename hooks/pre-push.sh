@@ -12,8 +12,9 @@ set -e
 
 # Get changed files vs main
 MAIN_BRANCH="main"
-git rev-parse --verify "$MAIN_BRANCH" &>/dev/null || MAIN_BRANCH="master"
-CHANGED_FILES=$(git diff --name-only "$MAIN_BRANCH"...HEAD 2>/dev/null || git diff --name-only HEAD~1 2>/dev/null || true)
+git rev-parse --verify "origin/$MAIN_BRANCH" &>/dev/null || MAIN_BRANCH="master"
+git fetch origin "$MAIN_BRANCH" --quiet 2>/dev/null || true
+CHANGED_FILES=$(git diff --name-only "origin/$MAIN_BRANCH"...HEAD 2>/dev/null || git diff --name-only HEAD~1 2>/dev/null || true)
 
 [ -z "$CHANGED_FILES" ] && exit 0
 
