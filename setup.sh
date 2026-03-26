@@ -187,6 +187,11 @@ echo "  Updating commands (start, review)..."
 cp "$SCRIPT_DIR/commands/"*.md .claude/commands/
 
 # Git hooks
+if offer_file "$SCRIPT_DIR/hooks/pre-commit.sh" ".git/hooks/pre-commit" ".git/hooks/pre-commit"; then
+  cp "$SCRIPT_DIR/hooks/pre-commit.sh" .git/hooks/pre-commit
+  chmod +x .git/hooks/pre-commit
+fi
+
 if offer_file "$SCRIPT_DIR/hooks/pre-push.sh" ".git/hooks/pre-push" ".git/hooks/pre-push"; then
   cp "$SCRIPT_DIR/hooks/pre-push.sh" .git/hooks/pre-push
   chmod +x .git/hooks/pre-push

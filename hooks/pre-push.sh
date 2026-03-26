@@ -1,12 +1,12 @@
 #!/bin/bash
 # Git pre-push hook.
-# Safety net that catches everything — including forgotten /review.
+# Final gate before sharing code — catches what pre-commit doesn't.
 #
 # Flow:
-#   1. Auto-format + auto-fix lint → auto-commit
-#   2. Tests → hard block (no bypass)
-#   3. Review check → warn if /review not run
-#   4. Remaining issues (complexity, type errors, warnings) → [p]ush / [f]ix / [a]bort
+#   1. Review check → warn if /review not run
+#   2. Remaining issues (complexity, type errors, warnings) → [p]ush / [f]ix / [a]bort
+#
+# Formatting, lint fixes, and tests run at pre-commit time.
 
 set -e
 
@@ -21,88 +21,7 @@ CPP_FILES=$(echo "$CHANGED_FILES" | grep -E '\.(cpp|cc|cxx|h|hpp|hxx)$' || true)
 PY_FILES=$(echo "$CHANGED_FILES" | grep -E '\.py$' || true)
 
 # ============================================================
-# Step 1: Auto-format and auto-fix (silent, auto-commit)
-# ============================================================
-
-FIXED=0
-
-# C++ formatting
-if [ -n "$CPP_FILES" ] && command -v clang-format &>/dev/null; then
-  for f in $CPP_FILES; do
-    [ -f "$f" ] || continue
-    clang-format -i "$f"
-  done
-fi
-
-# Python formatting + auto-fixable lint
-if [ -n "$PY_FILES" ] && command -v ruff &>/dev/null; then
-  for f in $PY_FILES; do
-    [ -f "$f" ] || continue
-    ruff format --quiet "$f"
-    ruff check --fix --quiet "$f" 2>/dev/null || true
-  done
-fi
-
-# C++ auto-fixable lint (safe clang-tidy fixes only)
-if [ -n "$CPP_FILES" ] && command -v clang-tidy &>/dev/null; then
-  COMPILE_DB=""
-  [ -f "build/compile_commands.json" ] && COMPILE_DB="-p build"
-  [ -f "compile_commands.json" ] && COMPILE_DB="-p ."
-
-  if [ -n "$COMPILE_DB" ]; then
-    for f in $CPP_FILES; do
-      [ -f "$f" ] || continue
-      # Only auto-fix safe categories (modernize, readability naming)
-      clang-tidy $COMPILE_DB \
-        --checks="-*,modernize-use-nullptr,modernize-use-override,modernize-use-using,readability-braces-around-statements" \
-        --fix --quiet "$f" 2>/dev/null || true
-    done
-  fi
-fi
-
-# Check if anything changed and auto-commit
-if ! git diff --quiet 2>/dev/null; then
-  echo "Auto-fixed formatting and lint issues. Committing..."
-  git add -u
-  git commit -m "style: auto-format and lint fixes before push"
-  FIXED=1
-  echo ""
-fi
-
-# ============================================================
-# Step 2: Tests (hard block, no bypass)
-# ============================================================
-
-echo "=== Running tests ==="
-
-TESTS_FAILED=0
-
-if [ -d "build" ] && command -v ctest &>/dev/null; then
-  echo "Running C++ tests..."
-  if ! ctest --test-dir build --output-on-failure; then
-    echo "FAILED: C++ tests failed."
-    TESTS_FAILED=1
-  fi
-fi
-
-if command -v pytest &>/dev/null; then
-  echo "Running Python tests..."
-  if ! pytest --tb=short -q; then
-    echo "FAILED: Python tests failed."
-    TESTS_FAILED=1
-  fi
-fi
-
-if [ "$TESTS_FAILED" -ne 0 ]; then
-  echo ""
-  echo "Push blocked: tests failed. Fix tests before pushing."
-  exit 1
-fi
-
-echo "Tests passed."
-
-# ============================================================
-# Step 3: Review check (warn if /review not run)
+# Step 1: Review check (warn if /review not run)
 # ============================================================
 
 REVIEW_STALE=0
@@ -157,7 +76,7 @@ if [ "$REVIEW_STALE" -ne 0 ]; then
 fi
 
 # ============================================================
-# Step 4: Remaining issues (interactive: push / fix / abort)
+# Step 2: Remaining issues (interactive: push / fix / abort)
 # ============================================================
 
 ISSUES=""

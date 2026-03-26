@@ -1,0 +1,85 @@
+#!/bin/bash
+# Git pre-commit hook.
+#
+# Flow:
+#   1. Auto-format + auto-fix lint (staged files only)
+#   2. Tests → hard block (no bypass)
+
+set -e
+
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null || true)
+
+[ -z "$STAGED_FILES" ] && exit 0
+
+CPP_FILES=$(echo "$STAGED_FILES" | grep -E '\.(cpp|cc|cxx|h|hpp|hxx)$' || true)
+PY_FILES=$(echo "$STAGED_FILES" | grep -E '\.py$' || true)
+
+# ============================================================
+# Step 1: Auto-format and auto-fix
+# ============================================================
+
+# C++ formatting
+if [ -n "$CPP_FILES" ] && command -v clang-format &>/dev/null; then
+  clang-format -i $CPP_FILES
+fi
+
+# Python formatting + auto-fixable lint
+if [ -n "$PY_FILES" ] && command -v ruff &>/dev/null; then
+  ruff format --quiet $PY_FILES
+  ruff check --fix --quiet $PY_FILES 2>/dev/null || true
+fi
+
+# C++ auto-fixable lint (safe clang-tidy fixes only)
+if [ -n "$CPP_FILES" ] && command -v clang-tidy &>/dev/null; then
+  COMPILE_DB=""
+  [ -f "build/compile_commands.json" ] && COMPILE_DB="-p build"
+  [ -f "compile_commands.json" ] && COMPILE_DB="-p ."
+
+  if [ -n "$COMPILE_DB" ]; then
+    for f in $CPP_FILES; do
+      clang-tidy $COMPILE_DB \
+        --checks="-*,modernize-use-nullptr,modernize-use-override,modernize-use-using,readability-braces-around-statements" \
+        --fix --quiet "$f" 2>/dev/null || true
+    done
+  fi
+fi
+
+# Re-stage files modified by formatting/lint fixes
+git diff --name-only -- $STAGED_FILES 2>/dev/null | while read -r f; do
+  git add "$f"
+done
+
+# ============================================================
+# Step 2: Tests (hard block)
+# ============================================================
+
+echo "=== Pre-commit: running tests ==="
+
+TESTS_FAILED=0
+
+# Only run C++ tests if C++ files were staged
+if [ -n "$CPP_FILES" ] && [ -d "build" ] && command -v ctest &>/dev/null; then
+  echo "Running C++ tests..."
+  if ! ctest --test-dir build --output-on-failure -j"$(nproc 2>/dev/null || echo 4)"; then
+    echo "FAILED: C++ tests failed."
+    TESTS_FAILED=1
+  fi
+fi
+
+# Only run Python tests if Python files were staged
+if [ -n "$PY_FILES" ] && command -v pytest &>/dev/null; then
+  echo "Running Python tests..."
+  if ! pytest --tb=short -q; then
+    echo "FAILED: Python tests failed."
+    TESTS_FAILED=1
+  fi
+fi
+
+if [ "$TESTS_FAILED" -ne 0 ]; then
+  echo ""
+  echo "Commit blocked: tests failed. Fix tests before committing."
+  exit 1
+fi
+
+echo "Tests passed."
+exit 0
