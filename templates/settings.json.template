@@ -13,6 +13,8 @@
       "Read(*)",
       "Edit(*)",
       "Edit(.claude/.last-review)",
+      "Bash(* > .claude/.last-review)",
+      "Bash(* > .claude/.last-review *)",
       "WebSearch",
       "WebFetch"
     ],
