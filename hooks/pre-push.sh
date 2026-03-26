@@ -58,7 +58,7 @@ fi
 extract_block() {
   local tag="$1"
   if [ -f "CLAUDE.md" ]; then
-    sed -n '/^## Build & Test/,/^## /{' \
+    sed -n -e '/^## Build & Test/,/^## /{' \
       -e "/^\`\`\`${tag}$/,/^\`\`\`$/{ /^\`\`\`/d; p; }" \
       -e '}' CLAUDE.md
   fi
