@@ -4,7 +4,7 @@
 #
 # Flow:
 #   1. Review check → warn if /review not run
-#   2. Remaining issues (complexity, type errors, warnings) → [p]ush / [f]ix / [a]bort
+#   2. Remaining issues (complexity, type errors, warnings) → warn and continue
 #
 # Formatting, lint fixes, and tests run at pre-commit time.
 
@@ -46,38 +46,12 @@ fi
 
 if [ "$REVIEW_STALE" -ne 0 ]; then
   echo ""
-  echo "  [r] Run review first (abort push)"
-  echo "  [p] Push without review"
-  echo "  [a] Abort"
-  echo ""
-
-  while true; do
-    read -p "  > " -r -n1 CHOICE </dev/tty
-    echo ""
-    case "$CHOICE" in
-      r|R)
-        echo "Aborting push. Run /review in Claude Code."
-        mkdir -p .claude
-        echo "pending" > .claude/.pending-review
-        exit 1
-        ;;
-      p|P)
-        echo "Continuing without review."
-        break
-        ;;
-      a|A)
-        echo "Push aborted."
-        exit 1
-        ;;
-      *)
-        echo "  Invalid choice. Press r, p, or a."
-        ;;
-    esac
-  done
+  echo "Push blocked: run /review first."
+  exit 1
 fi
 
 # ============================================================
-# Step 2: Remaining issues (interactive: push / fix / abort)
+# Step 2: Remaining issues (warn and continue)
 # ============================================================
 
 ISSUES=""
@@ -126,7 +100,7 @@ if [ -n "$PY_FILES" ] && command -v mypy &>/dev/null; then
   fi
 fi
 
-# If issues found, present interactive menu
+# If issues found, warn but allow push
 if [ -n "$ISSUES" ]; then
   echo ""
   echo "═══════════════════════════════════════════"
@@ -135,34 +109,9 @@ if [ -n "$ISSUES" ]; then
   echo "$ISSUES"
   echo "═══════════════════════════════════════════"
   echo ""
-  echo "  [p] Push anyway — defer these issues"
-  echo "  [f] Fix — abort push, go fix the issues"
-  echo "  [a] Abort — cancel push"
+  echo "Warning: pushing with known issues."
+else
   echo ""
-
-  while true; do
-    read -p "  > " -r -n1 CHOICE </dev/tty
-    echo ""
-    case "$CHOICE" in
-      p|P)
-        echo "Pushing with known issues."
-        exit 0
-        ;;
-      f|F)
-        echo "Push aborted. Fix the issues and try again."
-        exit 1
-        ;;
-      a|A)
-        echo "Push aborted."
-        exit 1
-        ;;
-      *)
-        echo "  Invalid choice. Press p, f, or a."
-        ;;
-    esac
-  done
+  echo "All checks passed."
 fi
-
-echo ""
-echo "All checks passed."
 exit 0
