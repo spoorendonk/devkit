@@ -20,7 +20,7 @@ PY_FILES=$(echo "$STAGED_FILES" | grep -E '\.py$' || true)
 
 # C++ formatting
 if [ -n "$CPP_FILES" ] && command -v clang-format &>/dev/null; then
-  clang-format -i $CPP_FILES
+  clang-format -i $CPP_FILES || true
 fi
 
 # Python formatting + auto-fixable lint
@@ -45,9 +45,9 @@ if [ -n "$CPP_FILES" ] && command -v clang-tidy &>/dev/null; then
 fi
 
 # Re-stage files modified by formatting/lint fixes
-git diff --name-only -- $STAGED_FILES 2>/dev/null | while read -r f; do
+while read -r f; do
   git add "$f"
-done
+done < <(git diff --name-only -- $STAGED_FILES 2>/dev/null)
 
 # ============================================================
 # Step 2: Tests (hard block)

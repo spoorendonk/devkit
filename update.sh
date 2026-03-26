@@ -6,6 +6,16 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
+# Helper: install a git hook (overwrites silently — this is a non-interactive update)
+install_hook() {
+  local hook="$1"
+  local src="$SCRIPT_DIR/hooks/$2"
+  local dst=".git/hooks/$hook"
+
+  cp "$src" "$dst"
+  chmod +x "$dst"
+}
+
 echo ""
 echo "  dev-standards update"
 echo "  ─────────────────────"
@@ -26,10 +36,9 @@ ln -sf CLAUDE.md AGENTS.md
 
 # Git hooks
 echo "  Updating git hooks..."
-cp "$SCRIPT_DIR/hooks/pre-push.sh" .git/hooks/pre-push
-chmod +x .git/hooks/pre-push
-cp "$SCRIPT_DIR/hooks/commit-msg.sh" .git/hooks/commit-msg
-chmod +x .git/hooks/commit-msg
+install_hook pre-commit pre-commit.sh
+install_hook pre-push pre-push.sh
+install_hook commit-msg commit-msg.sh
 
 # Settings (merge: template defaults + user additions preserved)
 echo "  Merging .claude/settings.json..."

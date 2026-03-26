@@ -60,6 +60,49 @@ offer_file() {
   done
 }
 
+# Helper: offer to install a git hook
+# Usage: install_hook <hook-name> <source-filename>
+install_hook() {
+  local hook="$1"
+  local src="$SCRIPT_DIR/hooks/$2"
+  local dst=".git/hooks/$hook"
+
+  if offer_file "$src" "$dst" ".git/hooks/$hook"; then
+    cp "$src" "$dst"
+    chmod +x "$dst"
+  fi
+}
+
+# Helper: offer to symlink a config file from .dev-standards
+# Usage: offer_symlink <filename> <config-subpath>
+offer_symlink() {
+  local name="$1"
+  local target=".dev-standards/config/$1"
+
+  if [ ! -f "$name" ]; then
+    echo "  Symlinking $name..."
+    ln -s "$target" "$name"
+  elif [ -L "$name" ]; then
+    echo "  $name: already a symlink."
+  else
+    echo ""
+    echo "  $name exists (not a symlink). Diff with shared config:"
+    echo "  ─────────────────────────────────────────────────"
+    diff --color=auto -u "$name" "$SCRIPT_DIR/config/$name" | head -30 || true
+    echo "  ─────────────────────────────────────────────────"
+    echo "  [o] Replace with symlink  [s] Keep existing"
+    while true; do
+      read -p "  > " -r -n1 CHOICE
+      echo ""
+      case "$CHOICE" in
+        o|O) rm "$name"; ln -s "$target" "$name"; echo "  Replaced with symlink."; break ;;
+        s|S) echo "  Keeping existing."; break ;;
+        *) echo "  Press o or s." ;;
+      esac
+    done
+  fi
+}
+
 echo ""
 echo "  dev-standards setup"
 echo "  ─────────────────────"
@@ -128,51 +171,8 @@ fi
 
 # Symlink tool config files (C++ projects)
 if [ "$TEMPLATE" = "cpp" ] || [ "$TEMPLATE" = "cpp-python" ]; then
-  if [ ! -f ".clang-format" ]; then
-    echo "  Symlinking .clang-format..."
-    ln -s .dev-standards/config/.clang-format .clang-format
-  elif [ -L ".clang-format" ]; then
-    echo "  .clang-format: already a symlink."
-  else
-    echo ""
-    echo "  .clang-format exists (not a symlink). Diff with shared config:"
-    echo "  ─────────────────────────────────────────────────"
-    diff --color=auto -u .clang-format "$SCRIPT_DIR/config/.clang-format" | head -30 || true
-    echo "  ─────────────────────────────────────────────────"
-    echo "  [o] Replace with symlink  [s] Keep existing"
-    while true; do
-      read -p "  > " -r -n1 CHOICE
-      echo ""
-      case "$CHOICE" in
-        o|O) rm .clang-format; ln -s .dev-standards/config/.clang-format .clang-format; echo "  Replaced with symlink."; break ;;
-        s|S) echo "  Keeping existing."; break ;;
-        *) echo "  Press o or s." ;;
-      esac
-    done
-  fi
-
-  if [ ! -f ".clang-tidy" ]; then
-    echo "  Symlinking .clang-tidy..."
-    ln -s .dev-standards/config/.clang-tidy .clang-tidy
-  elif [ -L ".clang-tidy" ]; then
-    echo "  .clang-tidy: already a symlink."
-  else
-    echo ""
-    echo "  .clang-tidy exists (not a symlink). Diff with shared config:"
-    echo "  ─────────────────────────────────────────────────"
-    diff --color=auto -u .clang-tidy "$SCRIPT_DIR/config/.clang-tidy" | head -30 || true
-    echo "  ─────────────────────────────────────────────────"
-    echo "  [o] Replace with symlink  [s] Keep existing"
-    while true; do
-      read -p "  > " -r -n1 CHOICE
-      echo ""
-      case "$CHOICE" in
-        o|O) rm .clang-tidy; ln -s .dev-standards/config/.clang-tidy .clang-tidy; echo "  Replaced with symlink."; break ;;
-        s|S) echo "  Keeping existing."; break ;;
-        *) echo "  Press o or s." ;;
-      esac
-    done
-  fi
+  offer_symlink .clang-format
+  offer_symlink .clang-tidy
 fi
 
 # Python config (pyproject.toml)
@@ -187,20 +187,9 @@ echo "  Updating commands (start, review)..."
 cp "$SCRIPT_DIR/commands/"*.md .claude/commands/
 
 # Git hooks
-if offer_file "$SCRIPT_DIR/hooks/pre-commit.sh" ".git/hooks/pre-commit" ".git/hooks/pre-commit"; then
-  cp "$SCRIPT_DIR/hooks/pre-commit.sh" .git/hooks/pre-commit
-  chmod +x .git/hooks/pre-commit
-fi
-
-if offer_file "$SCRIPT_DIR/hooks/pre-push.sh" ".git/hooks/pre-push" ".git/hooks/pre-push"; then
-  cp "$SCRIPT_DIR/hooks/pre-push.sh" .git/hooks/pre-push
-  chmod +x .git/hooks/pre-push
-fi
-
-if offer_file "$SCRIPT_DIR/hooks/commit-msg.sh" ".git/hooks/commit-msg" ".git/hooks/commit-msg"; then
-  cp "$SCRIPT_DIR/hooks/commit-msg.sh" .git/hooks/commit-msg
-  chmod +x .git/hooks/commit-msg
-fi
+install_hook pre-commit pre-commit.sh
+install_hook pre-push pre-push.sh
+install_hook commit-msg commit-msg.sh
 
 echo ""
 echo "  Done. Next steps:"
