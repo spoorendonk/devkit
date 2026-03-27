@@ -100,8 +100,8 @@ Then re-run `setup.sh` to pick up any new hooks or commands.
 
 ### Git conventions
 
-- Trunk-based development with linear history on main (no PRs, no merge commits).
-- Always branch from main. Keep branches short-lived.
+- Trunk-based development with linear history on main. Commit directly to main or use short-lived feature branches.
+- No merge commits on main — rebase or squash merge only.
 - Conventional Commits enforced by the `commit-msg` hook.
 
 ## Hooks

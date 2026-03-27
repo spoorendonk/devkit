@@ -13,13 +13,13 @@
 
 ## Git Workflow
 
-Trunk-based development with linear history on main. No PRs — merge directly when local gates pass.
+Trunk-based development with linear history on main. Commit directly to main and push when local gates (pre-push hooks) pass.
 
-- ALWAYS branch from main. Run `git checkout main && git pull` before creating a branch.
-- NEVER create a branch from another feature branch.
+Feature branches are optional for larger changes:
+- Always branch from main. Run `git checkout main && git pull` before creating a branch.
+- Never create a branch from another feature branch.
 - Keep branches short-lived. Merge to main quickly.
 - Use rebase or squash merge to maintain linear history — no merge commits on main.
-- Before creating any branch, run `git branch --show-current` and confirm you're on main.
 
 ## Commit Messages
 
