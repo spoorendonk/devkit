@@ -52,16 +52,12 @@ if git -C "$cwd" rev-parse --git-dir > /dev/null 2>&1; then
         fi
     fi
 
-    # Working tree status: modified, untracked, deleted
-    wt_status=$(git -C "$cwd" status --porcelain 2>/dev/null)
-    modified=$(echo "$wt_status" | grep -cE '^ ?M')
-    untracked=$(echo "$wt_status" | grep -c '^?')
-    deleted=$(echo "$wt_status" | grep -cE '^ ?D')
-    wt=""
-    [ "$modified" -gt 0 ] 2>/dev/null && wt="~${modified}"
-    [ "$untracked" -gt 0 ] 2>/dev/null && wt="${wt:+$wt }+${untracked}"
-    [ "$deleted" -gt 0 ] 2>/dev/null && wt="${wt:+$wt }-${deleted}"
-    [ -n "$wt" ] && branch_detail="${branch_detail} $wt"
+    # Dirty working tree (tracked files only)
+    if git -C "$cwd" diff --quiet HEAD 2>/dev/null && git -C "$cwd" diff --cached --quiet HEAD 2>/dev/null; then
+        :
+    else
+        branch_detail="${branch_detail} *"
+    fi
 
     # Other branches: count total and stale
     other_branches=$(git -C "$cwd" branch 2>/dev/null \
