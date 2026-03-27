@@ -12,6 +12,9 @@
       "Bash(*;*)",
       "Read(*)",
       "Edit(*)",
+      "Glob(*)",
+      "Grep(*)",
+      "Search(*)",
       "WebSearch",
       "WebFetch"
     ],
