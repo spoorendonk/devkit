@@ -75,7 +75,9 @@ fi
 # Only run Python tests if Python files were staged
 if [ -n "$PY_FILES" ] && command -v pytest &>/dev/null; then
   echo "Running Python tests..."
-  if ! pytest --tb=short -q; then
+  rc=0; pytest --tb=short -q || rc=$?
+  # rc=0: passed, rc=5: no tests collected (all skipped) — both OK
+  if [ "$rc" -ne 0 ] && [ "$rc" -ne 5 ]; then
     echo "FAILED: Python tests failed."
     TESTS_FAILED=1
   fi

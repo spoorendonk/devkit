@@ -117,7 +117,9 @@ else
       if command -v pytest &>/dev/null; then
         echo ""
         echo "=== Running tests (Python) ==="
-        if ! pytest --tb=short -q; then
+        rc=0; pytest --tb=short -q || rc=$?
+        # rc=0: passed, rc=5: no tests collected (all skipped) — both OK
+        if [ "$rc" -ne 0 ] && [ "$rc" -ne 5 ]; then
           BUILD_FAILED=1
         fi
       fi
