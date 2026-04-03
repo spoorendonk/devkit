@@ -143,7 +143,7 @@ echo ""
 # Add submodule if not already present
 if [ ! -d ".devkit" ]; then
   echo "  Adding submodule..."
-  git submodule add https://github.com/flowty/devkit.git .devkit
+  git submodule add https://github.com/spoorendonk/devkit.git .devkit
 else
   echo "  .devkit/ already exists, skipping submodule add."
 fi

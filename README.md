@@ -21,7 +21,7 @@ Shared development standards, hooks, and tooling for Claude Code projects. Added
 From your project's root directory, add the submodule and run setup:
 
 ```bash
-git submodule add https://github.com/flowty/devkit.git .devkit
+git submodule add https://github.com/spoorendonk/devkit.git .devkit
 .devkit/setup.sh
 ```
 
