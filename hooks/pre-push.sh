@@ -22,7 +22,7 @@ PY_FILES=$(echo "$CHANGED_FILES" | grep -E '\.py$' || true)
 SH_FILES=$(echo "$CHANGED_FILES" | grep -E '\.sh$' || true)
 
 # Check if only non-code files changed (skip build+test for docs-only pushes)
-CODE_FILES=$(echo "$CHANGED_FILES" | grep -vE '^(\.dev-std/|LICENSE|CHANGELOG)' | grep -vE '\.(md|txt|rst)$' | grep -vE '^\.(gitignore|gitattributes)$' || true)
+CODE_FILES=$(echo "$CHANGED_FILES" | grep -vE '^(\.devkit/|LICENSE|CHANGELOG)' | grep -vE '\.(md|txt|rst)$' | grep -vE '^\.(gitignore|gitattributes)$' || true)
 
 # ============================================================
 # Step 1: Review check (block if /review not run)
@@ -31,8 +31,8 @@ CODE_FILES=$(echo "$CHANGED_FILES" | grep -vE '^(\.dev-std/|LICENSE|CHANGELOG)' 
 REVIEW_STALE=0
 CURRENT_HEAD=$(git rev-parse HEAD 2>/dev/null)
 
-if [ -f ".dev-std/.last-review" ]; then
-  LAST_REVIEWED=$(cat .dev-std/.last-review | tr -d '[:space:]')
+if [ -f ".devkit/.last-review" ]; then
+  LAST_REVIEWED=$(cat .devkit/.last-review | tr -d '[:space:]')
   if [ "$LAST_REVIEWED" != "$CURRENT_HEAD" ]; then
     COMMITS_SINCE=$(git rev-list --count "$LAST_REVIEWED..$CURRENT_HEAD" 2>/dev/null || echo "?")
     echo ""
@@ -208,6 +208,6 @@ else
 fi
 
 # Clean up review stamp so next changes require a fresh review
-rm -f .dev-std/.last-review
+rm -f .devkit/.last-review
 
 exit 0

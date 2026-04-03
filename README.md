@@ -1,4 +1,4 @@
-# dev-std
+# devkit
 
 Shared development standards, hooks, and tooling for Claude Code projects. Added as a git submodule to each project, it provides a consistent workflow across C++, Python, and C++/Python (nanobind) codebases.
 
@@ -21,15 +21,15 @@ Shared development standards, hooks, and tooling for Claude Code projects. Added
 From your project's root directory, add the submodule and run setup:
 
 ```bash
-git submodule add https://github.com/flowty/dev-std.git .dev-std
-.dev-std/setup.sh
+git submodule add https://github.com/flowty/devkit.git .devkit
+.devkit/setup.sh
 ```
 
-> **Note:** The setup script also adds the submodule if `.dev-std/` doesn't exist yet, so you can run `setup.sh` directly if you've already cloned the repo locally. But the above is the standard approach.
+> **Note:** The setup script also adds the submodule if `.devkit/` doesn't exist yet, so you can run `setup.sh` directly if you've already cloned the repo locally. But the above is the standard approach.
 
-### Cloning a project that already uses dev-std
+### Cloning a project that already uses devkit
 
-When you clone a repo that has dev-std as a submodule, the `.dev-std/` directory will be empty by default. Initialize it with:
+When you clone a repo that has devkit as a submodule, the `.devkit/` directory will be empty by default. Initialize it with:
 
 ```bash
 git clone <your-repo-url>
@@ -46,10 +46,10 @@ git clone --recurse-submodules <your-repo-url>
 The setup script will:
 
 1. Ask for your project name and type (C++, Python, or C++/Python)
-2. Add `dev-std` as a git submodule at `.dev-std/`
+2. Add `devkit` as a git submodule at `.devkit/`
 3. Generate a `CLAUDE.md` from the appropriate template
 4. Copy `.claude/settings.json` with pre-configured permissions and hooks
-5. Copy slash commands (`/start`, `/review`) into `.claude/commands/`
+5. Symlink slash commands (`/start`, `/review`) into `.claude/commands/`
 6. Install git hooks (`commit-msg`, `pre-push`)
 7. Symlink tool configs (`.clang-format`, `.clang-tidy`) for C++ projects
 8. Copy `pyproject.toml` with ruff/mypy config for Python projects
@@ -66,8 +66,8 @@ claude
 /init
 
 # 3. Commit the scaffolding
-git add CLAUDE.md .claude/ .dev-std .gitmodules
-git commit -m "chore: add dev-std"
+git add CLAUDE.md .claude/ .devkit .gitmodules
+git commit -m "chore: add devkit"
 
 # 4. Start working
 /start
@@ -78,9 +78,9 @@ git commit -m "chore: add dev-std"
 Pull the latest standards into an existing project:
 
 ```bash
-cd .dev-std && git pull origin main && cd ..
-git add .dev-std
-git commit -m "chore: update dev-std"
+cd .devkit && git pull origin main && cd ..
+git add .devkit
+git commit -m "chore: update devkit"
 ```
 
 Then re-run `setup.sh` to pick up any new hooks or commands.

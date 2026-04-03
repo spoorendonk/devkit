@@ -1,20 +1,20 @@
 Before starting any work, check the current state and present options. Follow these steps exactly:
 
-## Step 1: Check for dev-std updates
+## Step 1: Check for devkit updates
 
 1. Check if the submodule has upstream updates:
    ```bash
-   git -C .dev-std fetch origin main --quiet && git -C .dev-std rev-list HEAD..origin/main --count
+   git -C .devkit fetch origin main --quiet && git -C .devkit rev-list HEAD..origin/main --count
    ```
-   If the count is > 0, tell the user how many commits behind the submodule is and suggest running `bash .dev-std/update.sh` to pull the latest and re-apply shared files. Don't auto-run — let the user decide.
+   If the count is > 0, tell the user how many commits behind the submodule is and suggest running `bash .devkit/update.sh` to pull the latest and re-apply shared files. Don't auto-run — let the user decide.
 
-2. Check if copied files are out of sync with the current submodule:
-   - Compare each file in `.claude/commands/` against the matching file in `.dev-std/commands/`
-   - Compare `.git/hooks/pre-commit` against `.dev-std/hooks/pre-commit.sh`
-   - Compare `.git/hooks/pre-push` against `.dev-std/hooks/pre-push.sh`
-   - Compare `.git/hooks/commit-msg` against `.dev-std/hooks/commit-msg.sh`
+2. Check if shared files are out of sync with the current submodule:
+   - Verify `.claude/commands/start.md` and `.claude/commands/review.md` are symlinks pointing into `.devkit/commands/`. If any are missing or are regular files, suggest running `bash .devkit/update.sh`.
+   - Compare `.git/hooks/pre-commit` against `.devkit/hooks/pre-commit.sh`
+   - Compare `.git/hooks/pre-push` against `.devkit/hooks/pre-push.sh`
+   - Compare `.git/hooks/commit-msg` against `.devkit/hooks/commit-msg.sh`
 
-   Use `diff -q` for each pair. If any differ, list the stale files and suggest running `bash .dev-std/update.sh` to update them.
+   Use `diff -q` for hook pairs. If any differ, list the stale files and suggest running `bash .devkit/update.sh` to update them.
 
 3. Check if CLAUDE.md has been fleshed out beyond the minimal template (should have build commands, test commands, project-specific conventions). If it's still minimal, suggest running `/init` to auto-detect project details.
 

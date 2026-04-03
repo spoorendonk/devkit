@@ -1,5 +1,5 @@
 #!/bin/bash
-# Interactive setup script for dev-std.
+# Interactive setup script for devkit.
 # Run from a project repo root.
 
 set -e
@@ -73,11 +73,11 @@ install_hook() {
   fi
 }
 
-# Helper: offer to symlink a config file from .dev-std
+# Helper: offer to symlink a config file from .devkit
 # Usage: offer_symlink <filename> <config-subpath>
 offer_symlink() {
   local name="$1"
-  local target=".dev-std/config/$1"
+  local target=".devkit/config/$1"
 
   if [ ! -f "$name" ]; then
     echo "  Symlinking $name..."
@@ -104,7 +104,7 @@ offer_symlink() {
 }
 
 echo ""
-echo "  dev-std setup"
+echo "  devkit setup"
 echo "  ─────────────────────"
 echo ""
 
@@ -141,11 +141,11 @@ esac
 echo ""
 
 # Add submodule if not already present
-if [ ! -d ".dev-std" ]; then
+if [ ! -d ".devkit" ]; then
   echo "  Adding submodule..."
-  git submodule add https://github.com/flowty/dev-std.git .dev-std
+  git submodule add https://github.com/flowty/devkit.git .devkit
 else
-  echo "  .dev-std/ already exists, skipping submodule add."
+  echo "  .devkit/ already exists, skipping submodule add."
 fi
 
 # Create .claude directory
@@ -182,9 +182,19 @@ if [ "$TEMPLATE" = "python" ] || [ "$TEMPLATE" = "cpp-python" ]; then
   fi
 fi
 
-# Copy commands (always update to latest)
-echo "  Updating commands (start, review)..."
-cp "$SCRIPT_DIR/commands/"*.md .claude/commands/
+# Symlink commands (always update to latest)
+echo "  Symlinking commands (start, review)..."
+for cmd in "$SCRIPT_DIR/commands/"*.md; do
+  name=$(basename "$cmd")
+  target="../../.devkit/commands/$name"
+  dst=".claude/commands/$name"
+  if [ -L "$dst" ]; then
+    echo "    $name: already a symlink."
+  else
+    rm -f "$dst"
+    ln -s "$target" "$dst"
+  fi
+done
 
 # Git hooks
 install_hook pre-commit pre-commit.sh
@@ -195,6 +205,6 @@ echo ""
 echo "  Done. Next steps:"
 echo "    1. Open a Claude Code session in this project"
 echo "    2. Run /init to auto-detect project details and flesh out CLAUDE.md"
-echo "    3. Commit: git add CLAUDE.md AGENTS.md .claude/ .dev-std .gitmodules"
+echo "    3. Commit: git add CLAUDE.md AGENTS.md .claude/ .devkit .gitmodules"
 echo "    4. Run /start to begin your first session"
 echo ""

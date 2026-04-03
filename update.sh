@@ -1,6 +1,6 @@
 #!/bin/bash
-# Non-interactive update of dev-std files in the current project.
-# Run from project root, or via /update-dev-std in Claude.
+# Non-interactive update of devkit files in the current project.
+# Run from project root, or via /update-devkit in Claude.
 
 set -e
 
@@ -17,19 +17,23 @@ install_hook() {
 }
 
 echo ""
-echo "  dev-std update"
+echo "  devkit update"
 echo "  ─────────────────────"
 echo ""
 
 # Pull latest submodule
 echo "  Pulling latest submodule..."
-git submodule update --remote .dev-std
+git submodule update --remote .devkit
 echo ""
 
-# Slash commands (always overwrite)
-echo "  Updating commands..."
+# Slash commands (symlink to submodule)
+echo "  Updating command symlinks..."
 mkdir -p .claude/commands
-cp "$SCRIPT_DIR/commands/"*.md .claude/commands/
+for cmd in "$SCRIPT_DIR/commands/"*.md; do
+  name=$(basename "$cmd")
+  rm -f ".claude/commands/$name"
+  ln -s "../../.devkit/commands/$name" ".claude/commands/$name"
+done
 
 # AGENTS.md symlink
 ln -sf CLAUDE.md AGENTS.md
