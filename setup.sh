@@ -188,12 +188,8 @@ for cmd in "$SCRIPT_DIR/commands/"*.md; do
   name=$(basename "$cmd")
   target="../../.devkit/commands/$name"
   dst=".claude/commands/$name"
-  if [ -L "$dst" ]; then
-    echo "    $name: already a symlink."
-  else
-    rm -f "$dst"
-    ln -s "$target" "$dst"
-  fi
+  rm -f "$dst"
+  ln -s "$target" "$dst"
 done
 
 # Git hooks
