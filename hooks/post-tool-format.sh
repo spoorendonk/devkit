@@ -25,15 +25,25 @@ case "$EXT" in
     ;;
 
   py)
+    # Resolve venv
+    VENV_BIN=""
+    [ -d ".venv" ] && VENV_BIN=".venv/bin"
+    [ -d "venv" ] && VENV_BIN="venv/bin"
+
+    if [ -z "$VENV_BIN" ]; then
+      echo "No virtualenv found. Create one: python3 -m venv .venv"
+      exit 2
+    fi
+
     # Auto-format Python (non-blocking)
-    if command -v ruff &>/dev/null; then
-      ruff format --quiet "$FILE"
-      ruff check --fix --quiet "$FILE"
+    if [ -x "$VENV_BIN/ruff" ]; then
+      "$VENV_BIN/ruff" format --quiet "$FILE"
+      "$VENV_BIN/ruff" check --fix --quiet "$FILE"
     fi
 
     # Complexity check (blocking)
-    if command -v ruff &>/dev/null; then
-      COMPLEXITY=$(ruff check --select C901 --no-fix "$FILE" 2>&1)
+    if [ -x "$VENV_BIN/ruff" ]; then
+      COMPLEXITY=$("$VENV_BIN/ruff" check --select C901 --no-fix "$FILE" 2>&1)
       if [ $? -ne 0 ] && [ -n "$COMPLEXITY" ]; then
         echo "Complexity violation:"
         echo "$COMPLEXITY"
@@ -46,11 +56,11 @@ case "$EXT" in
     fi
 
     # Type checking via mypy daemon (blocking)
-    if command -v dmypy &>/dev/null; then
+    if [ -x "$VENV_BIN/dmypy" ]; then
       # Start daemon if not running
-      dmypy status &>/dev/null || dmypy start --log-file /tmp/dmypy.log &>/dev/null
+      "$VENV_BIN/dmypy" status &>/dev/null || "$VENV_BIN/dmypy" start --log-file /tmp/dmypy.log &>/dev/null
 
-      TYPECHECK=$(dmypy check "$FILE" 2>&1)
+      TYPECHECK=$("$VENV_BIN/dmypy" check "$FILE" 2>&1)
       if [ $? -ne 0 ] && [ -n "$TYPECHECK" ]; then
         # Filter out "Success" messages and empty results
         if ! echo "$TYPECHECK" | grep -q "^Success"; then

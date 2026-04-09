@@ -16,6 +16,24 @@ PY_FILES=$(echo "$STAGED_FILES" | grep -E '\.py$' || true)
 SH_FILES=$(echo "$STAGED_FILES" | grep -E '\.sh$' || true)
 
 # ============================================================
+# Python venv — required for all Python tooling
+# ============================================================
+
+if [ -n "$PY_FILES" ]; then
+  VENV_DIR=""
+  [ -d ".venv" ] && VENV_DIR=".venv"
+  [ -d "venv" ] && VENV_DIR="venv"
+
+  if [ -z "$VENV_DIR" ]; then
+    echo "FAILED: No virtualenv found. Create one before committing Python files:"
+    echo "  python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'"
+    exit 1
+  fi
+
+  VENV_BIN="$VENV_DIR/bin"
+fi
+
+# ============================================================
 # Step 1: Auto-format and auto-fix
 # ============================================================
 
@@ -30,9 +48,9 @@ if [ -n "$SH_FILES" ] && command -v shfmt &>/dev/null; then
 fi
 
 # Python formatting + auto-fixable lint
-if [ -n "$PY_FILES" ] && command -v ruff &>/dev/null; then
-  ruff format --quiet $PY_FILES
-  ruff check --fix --quiet $PY_FILES 2>/dev/null || true
+if [ -n "$PY_FILES" ] && [ -x "$VENV_BIN/ruff" ]; then
+  "$VENV_BIN/ruff" format --quiet $PY_FILES
+  "$VENV_BIN/ruff" check --fix --quiet $PY_FILES 2>/dev/null || true
 fi
 
 # C++ auto-fixable lint (safe clang-tidy fixes only)
@@ -73,15 +91,9 @@ if [ -n "$CPP_FILES" ] && [ -d "build" ] && command -v ctest &>/dev/null; then
 fi
 
 # Only run Python tests if Python files were staged
-PYTEST_CMD=""
-if [ -f ".venv/bin/pytest" ]; then
-  PYTEST_CMD=".venv/bin/pytest"
-elif command -v pytest &>/dev/null; then
-  PYTEST_CMD="pytest"
-fi
-if [ -n "$PY_FILES" ] && [ -n "$PYTEST_CMD" ]; then
+if [ -n "$PY_FILES" ] && [ -x "$VENV_BIN/pytest" ]; then
   echo "Running Python tests..."
-  rc=0; $PYTEST_CMD --tb=short -q || rc=$?
+  rc=0; "$VENV_BIN/pytest" --tb=short -q || rc=$?
   # rc=0: passed, rc=5: no tests collected (all skipped) — both OK
   if [ "$rc" -ne 0 ] && [ "$rc" -ne 5 ]; then
     echo "FAILED: Python tests failed."

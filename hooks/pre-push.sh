@@ -21,6 +21,21 @@ CPP_FILES=$(echo "$CHANGED_FILES" | grep -E '\.(cpp|cc|cxx|h|hpp|hxx)$' || true)
 PY_FILES=$(echo "$CHANGED_FILES" | grep -E '\.py$' || true)
 SH_FILES=$(echo "$CHANGED_FILES" | grep -E '\.sh$' || true)
 
+# Python venv — required for all Python tooling
+if [ -n "$PY_FILES" ]; then
+  VENV_DIR=""
+  [ -d ".venv" ] && VENV_DIR=".venv"
+  [ -d "venv" ] && VENV_DIR="venv"
+
+  if [ -z "$VENV_DIR" ]; then
+    echo "FAILED: No virtualenv found. Create one before pushing Python files:"
+    echo "  python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'"
+    exit 1
+  fi
+
+  VENV_BIN="$VENV_DIR/bin"
+fi
+
 # Check if only non-code files changed (skip build+test for docs-only pushes)
 CODE_FILES=$(echo "$CHANGED_FILES" | grep -vE '^(\.devkit/|LICENSE|CHANGELOG)' | grep -vE '\.(md|txt|rst)$' | grep -vE '^\.(gitignore|gitattributes)$' || true)
 
@@ -114,10 +129,10 @@ else
     fi
 
     if [ -f "pyproject.toml" ] || [ -f "setup.py" ]; then
-      if command -v pytest &>/dev/null; then
+      if [ -n "$VENV_BIN" ] && [ -x "$VENV_BIN/pytest" ]; then
         echo ""
         echo "=== Running tests (Python) ==="
-        rc=0; pytest --tb=short -q || rc=$?
+        rc=0; "$VENV_BIN/pytest" --tb=short -q || rc=$?
         # rc=0: passed, rc=5: no tests collected (all skipped) — both OK
         if [ "$rc" -ne 0 ] && [ "$rc" -ne 5 ]; then
           BUILD_FAILED=1
@@ -161,10 +176,10 @@ if [ -n "$CPP_FILES" ] && command -v clang-tidy &>/dev/null; then
 fi
 
 # ruff complexity (C901, not auto-fixable)
-if [ -n "$PY_FILES" ] && command -v ruff &>/dev/null; then
+if [ -n "$PY_FILES" ] && [ -n "$VENV_BIN" ] && [ -x "$VENV_BIN/ruff" ]; then
   for f in $PY_FILES; do
     [ -f "$f" ] || continue
-    RESULT=$(ruff check --select C901 --no-fix "$f" 2>&1 || true)
+    RESULT=$("$VENV_BIN/ruff" check --select C901 --no-fix "$f" 2>&1 || true)
     if [ -n "$RESULT" ] && ! echo "$RESULT" | grep -q "^All checks passed"; then
       ISSUES="${ISSUES}${RESULT}"$'\n'
     fi
@@ -183,10 +198,10 @@ if [ -n "$SH_FILES" ] && command -v shellcheck &>/dev/null; then
 fi
 
 # mypy type errors
-if [ -n "$PY_FILES" ] && command -v mypy &>/dev/null; then
+if [ -n "$PY_FILES" ] && [ -n "$VENV_BIN" ] && [ -x "$VENV_BIN/mypy" ]; then
   echo ""
   echo "=== Running mypy ==="
-  RESULT=$(mypy --strict $PY_FILES 2>&1 || true)
+  RESULT=$("$VENV_BIN/mypy" --strict $PY_FILES 2>&1 || true)
   if echo "$RESULT" | grep -qE '(error):'; then
     ISSUES="${ISSUES}${RESULT}"$'\n'
   else
