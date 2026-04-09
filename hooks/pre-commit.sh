@@ -73,9 +73,15 @@ if [ -n "$CPP_FILES" ] && [ -d "build" ] && command -v ctest &>/dev/null; then
 fi
 
 # Only run Python tests if Python files were staged
-if [ -n "$PY_FILES" ] && command -v pytest &>/dev/null; then
+PYTEST_CMD=""
+if [ -f ".venv/bin/pytest" ]; then
+  PYTEST_CMD=".venv/bin/pytest"
+elif command -v pytest &>/dev/null; then
+  PYTEST_CMD="pytest"
+fi
+if [ -n "$PY_FILES" ] && [ -n "$PYTEST_CMD" ]; then
   echo "Running Python tests..."
-  rc=0; pytest --tb=short -q || rc=$?
+  rc=0; $PYTEST_CMD --tb=short -q || rc=$?
   # rc=0: passed, rc=5: no tests collected (all skipped) — both OK
   if [ "$rc" -ne 0 ] && [ "$rc" -ne 5 ]; then
     echo "FAILED: Python tests failed."
