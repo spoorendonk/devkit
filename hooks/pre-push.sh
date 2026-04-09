@@ -22,7 +22,7 @@ PY_FILES=$(echo "$CHANGED_FILES" | grep -E '\.py$' || true)
 SH_FILES=$(echo "$CHANGED_FILES" | grep -E '\.sh$' || true)
 
 # Python venv — required for all Python tooling
-if [ -n "$PY_FILES" ]; then
+if [ -n "$PY_FILES" ] || [ -f "pyproject.toml" ] || [ -f "setup.py" ]; then
   source "$(dirname "$0")/resolve-venv.sh"
 fi
 
@@ -119,7 +119,7 @@ else
     fi
 
     if [ -f "pyproject.toml" ] || [ -f "setup.py" ]; then
-      if [ -n "$VENV_BIN" ] && [ -x "$VENV_BIN/pytest" ]; then
+      if [ -x "$VENV_BIN/pytest" ]; then
         echo ""
         echo "=== Running tests (Python) ==="
         rc=0; "$VENV_BIN/pytest" --tb=short -q || rc=$?
@@ -166,7 +166,7 @@ if [ -n "$CPP_FILES" ] && command -v clang-tidy &>/dev/null; then
 fi
 
 # ruff complexity (C901, not auto-fixable)
-if [ -n "$PY_FILES" ] && [ -n "$VENV_BIN" ] && [ -x "$VENV_BIN/ruff" ]; then
+if [ -n "$PY_FILES" ] && [ -x "$VENV_BIN/ruff" ]; then
   for f in $PY_FILES; do
     [ -f "$f" ] || continue
     RESULT=$("$VENV_BIN/ruff" check --select C901 --no-fix "$f" 2>&1 || true)
@@ -188,7 +188,7 @@ if [ -n "$SH_FILES" ] && command -v shellcheck &>/dev/null; then
 fi
 
 # mypy type errors
-if [ -n "$PY_FILES" ] && [ -n "$VENV_BIN" ] && [ -x "$VENV_BIN/mypy" ]; then
+if [ -n "$PY_FILES" ] && [ -x "$VENV_BIN/mypy" ]; then
   echo ""
   echo "=== Running mypy ==="
   RESULT=$("$VENV_BIN/mypy" --strict $PY_FILES 2>&1 || true)
