@@ -25,15 +25,7 @@ case "$EXT" in
     ;;
 
   py)
-    # Resolve venv
-    VENV_BIN=""
-    [ -d ".venv" ] && VENV_BIN=".venv/bin"
-    [ -d "venv" ] && VENV_BIN="venv/bin"
-
-    if [ -z "$VENV_BIN" ]; then
-      echo "No virtualenv found. Create one: python3 -m venv .venv"
-      exit 2
-    fi
+    source "$(dirname "$0")/resolve-venv.sh"
 
     # Auto-format Python (non-blocking)
     if [ -x "$VENV_BIN/ruff" ]; then

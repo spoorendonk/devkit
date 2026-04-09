@@ -23,17 +23,7 @@ SH_FILES=$(echo "$CHANGED_FILES" | grep -E '\.sh$' || true)
 
 # Python venv — required for all Python tooling
 if [ -n "$PY_FILES" ]; then
-  VENV_DIR=""
-  [ -d ".venv" ] && VENV_DIR=".venv"
-  [ -d "venv" ] && VENV_DIR="venv"
-
-  if [ -z "$VENV_DIR" ]; then
-    echo "FAILED: No virtualenv found. Create one before pushing Python files:"
-    echo "  python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'"
-    exit 1
-  fi
-
-  VENV_BIN="$VENV_DIR/bin"
+  source "$(dirname "$0")/resolve-venv.sh"
 fi
 
 # Check if only non-code files changed (skip build+test for docs-only pushes)
