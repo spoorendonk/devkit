@@ -175,15 +175,51 @@ if [ "$TEMPLATE" = "cpp" ] || [ "$TEMPLATE" = "cpp-python" ]; then
   offer_symlink .clang-tidy
 fi
 
-# Python config (pyproject.toml)
+# Python config (pyproject.toml): merge devkit-owned tool sections into any existing file.
+# NOTE: if pyproject.toml.template gains new [tool.X] sections, extend the awk regex below.
 if [ "$TEMPLATE" = "python" ] || [ "$TEMPLATE" = "cpp-python" ]; then
-  if offer_file "$SCRIPT_DIR/config/pyproject.toml.template" "pyproject.toml" "pyproject.toml"; then
-    cp "$SCRIPT_DIR/config/pyproject.toml.template" pyproject.toml
+  TEMPLATE_PYPROJECT="$SCRIPT_DIR/config/pyproject.toml.template"
+  # strip_template_header: emit the template without its leading `# Add these sections` comment
+  # and without any leading blank lines — gives a clean `[tool.ruff]`-first block to append.
+  strip_template_header() {
+    awk '/^# Add these sections/ {next} started || NF {started=1; print}' "$TEMPLATE_PYPROJECT"
+  }
+  if [ ! -f pyproject.toml ]; then
+    echo "  Creating pyproject.toml from template..."
+    strip_template_header > pyproject.toml
+  else
+    echo "  Merging devkit tool sections into existing pyproject.toml..."
+    cp pyproject.toml pyproject.toml.devkit-bak
+    echo "  Backup written to pyproject.toml.devkit-bak (restore with: mv pyproject.toml.devkit-bak pyproject.toml)"
+    # Strip any existing [tool.ruff*] and [tool.mypy*] single-bracket tables.
+    # Array-of-tables ([[tool.mypy.overrides]]) are intentionally preserved — users own those.
+    awk '
+      /^\[/ {
+        if ($0 ~ /^\[tool\.(ruff|mypy)(\.|])/) { skip = 1 }
+        else { skip = 0 }
+      }
+      !skip { print }
+    ' pyproject.toml > pyproject.toml.tmp
+    # Collapse trailing blank lines from user content, then append one blank + template.
+    # This makes the merge idempotent (re-running setup.sh doesn't accumulate blank lines).
+    {
+      awk 'NF {for (i=0; i<n; i++) print ""; n=0; print; next} {n++}' pyproject.toml.tmp
+      echo ""
+      strip_template_header
+    } > pyproject.toml.merged
+    mv pyproject.toml.merged pyproject.toml
+    rm -f pyproject.toml.tmp
+    echo "  Merged. User's [project]/[build-system]/other tables preserved; [tool.ruff*] and [tool.mypy] refreshed from devkit."
   fi
 fi
 
+# Prune symlinks for commands no longer in devkit (e.g. start.md after removal)
+for link in .claude/commands/*.md; do
+  [ -L "$link" ] && [ ! -e "$link" ] && rm "$link"
+done
+
 # Symlink commands (always update to latest)
-echo "  Symlinking commands (start, review)..."
+echo "  Symlinking commands..."
 for cmd in "$SCRIPT_DIR/commands/"*.md; do
   name=$(basename "$cmd")
   target="../../.devkit/commands/$name"
@@ -202,5 +238,4 @@ echo "  Done. Next steps:"
 echo "    1. Open a Claude Code session in this project"
 echo "    2. Run /init to auto-detect project details and flesh out CLAUDE.md"
 echo "    3. Commit: git add CLAUDE.md AGENTS.md .claude/ .devkit .gitmodules"
-echo "    4. Run /start to begin your first session"
 echo ""

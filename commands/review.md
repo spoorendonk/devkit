@@ -52,13 +52,20 @@ Each agent receives:
 - The full diff from Step 2
 - The relevant source files (not just the diff — read the full files for context)
 - The standards from Step 3
+- If the work is linked to a gh issue: the issue body, fetched via `gh issue view <num> --json title,body,labels,state,comments`
+- If a plan file guided the work (e.g. in `~/.claude/plans/`): its path, passed explicitly to each agent so the subagent session has it in context
 
 Review for:
-- Logic bugs, edge cases, error handling gaps
-- Adherence to project standards (naming, style, conventions)
-- Test coverage gaps and test quality
-- Refactoring opportunities, dead code, duplication, complexity
-- Anything else that looks wrong or could be improved
+- **Issue-spec adherence.** If the branch or PR is linked to a gh issue, verify the implementation actually matches what the issue asked for.
+- **Plan adherence.** If a plan was written for this work, verify the implementation follows it. Divergences from the plan that weren't re-negotiated with the user are major findings.
+- **Scope completeness.** Everything in the issue spec *and* the plan must be implemented, or explicitly deferred via a newly opened gh issue. No silent TODOs, no "will fix later" stubs, no partial implementations.
+- **No shortcut implementations.** Reject "simple placeholder now, do it properly later" work. The first implementation must be the best one — call this out as a major finding if spotted.
+- **Refactoring opportunities.** Dead code, duplication, complexity, weak abstractions.
+- **Performance bottlenecks.** Critical: most of our code is solvers. Look hard at hot loops, allocation in inner loops, asymptotic complexity, unnecessary copies, and algorithmic choices. Flag perf concerns as major even when code is "correct".
+- Logic bugs, edge cases, error handling gaps.
+- Adherence to project standards (naming, style, conventions).
+- Test coverage gaps and test quality.
+- Anything else that looks wrong or could be improved.
 
 Each agent returns a structured list of findings with: file, line, issue, severity (nit vs major), and suggested fix.
 

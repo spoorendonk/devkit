@@ -8,7 +8,7 @@ Shared development standards, hooks, and tooling for Claude Code projects. Added
 |---------------|--------------------------------------------------------------------------|
 | `standards/`  | Coding standards (common workflow, C++, Python, nanobind)                |
 | `templates/`  | `CLAUDE.md` templates and `settings.json` for Claude Code               |
-| `commands/`   | Slash commands (`/start`, `/review`)                                     |
+| `commands/`   | Slash commands (`/review`)                                               |
 | `hooks/`      | Git hooks (commit-msg, pre-push) and Claude Code hooks                  |
 | `config/`     | Shared tool configs (`.clang-format`, `.clang-tidy`, `pyproject.toml`)  |
 | `statusline.sh` | Claude Code status line showing branch, review state, context usage  |
@@ -49,7 +49,7 @@ The setup script will:
 2. Add `devkit` as a git submodule at `.devkit/`
 3. Generate a `CLAUDE.md` from the appropriate template
 4. Copy `.claude/settings.json` with pre-configured permissions and hooks
-5. Symlink slash commands (`/start`, `/review`) into `.claude/commands/`
+5. Symlink slash commands (`/review`) into `.claude/commands/`
 6. Install git hooks (`commit-msg`, `pre-push`)
 7. Symlink tool configs (`.clang-format`, `.clang-tidy`) for C++ projects
 8. Copy `pyproject.toml` with ruff/mypy config for Python projects
@@ -68,9 +68,6 @@ claude
 # 3. Commit the scaffolding
 git add CLAUDE.md .claude/ .devkit .gitmodules
 git commit -m "chore: add devkit"
-
-# 4. Start working
-/start
 ```
 
 ### Updating
@@ -88,10 +85,9 @@ Then re-run `setup.sh` to pick up any new hooks or commands.
 ## Workflow
 
 ```
-/start → plan (non-trivial) → implement → test → /review → push to main
+plan (non-trivial) → implement → test → /review → push to main
 ```
 
-- **`/start`** — Checks branch state, flags stale branches, lets you pick or create a branch.
 - **Plan** — For non-trivial work, enter plan mode and align on approach before coding.
 - **Implement** — Write code. Hooks auto-format and type-check on every save.
 - **Test** — Run tests locally.

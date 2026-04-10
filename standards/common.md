@@ -1,15 +1,14 @@
 ## Development Workflow
 
 ```
-/start → plan (non-trivial) → implement → test → /review → push to main
+plan (non-trivial) → implement → test → /review → push to main
 ```
 
-1. **`/start`**: check branch state, flag stale branches, pick or create a branch.
-2. **Plan**: for non-trivial work, enter plan mode and align on approach before implementing. Small fixes can go straight to code.
-3. **Implement**: write code. Hooks auto-format, type-check, and flag complexity on every save.
-4. **Test**: run tests locally before considering work done.
-5. **`/review`**: multi-agent review pipeline. Nits are auto-fixed. Major issues are presented for human decision.
-6. **Push to main**: pre-push hook is the final gate (tests + clang-tidy + mypy).
+1. **Plan**: for non-trivial work, enter plan mode and align on approach before implementing. Small fixes can go straight to code.
+2. **Implement**: write code. Hooks auto-format, type-check, and flag complexity on every save.
+3. **Test**: run tests locally before considering work done.
+4. **`/review`**: multi-agent review pipeline. Nits are auto-fixed. Major issues are presented for human decision.
+5. **Push to main**: pre-push hook is the final gate (tests + clang-tidy + mypy).
 
 ## Git Workflow
 
@@ -20,6 +19,28 @@ Feature branches are optional for larger changes:
 - Never create a branch from another feature branch.
 - Keep branches short-lived. Merge to main quickly.
 - Use rebase or squash merge to maintain linear history — no merge commits on main.
+
+## Issue Tracking
+
+GitHub Issues is the tracker. Use the `gh` CLI.
+
+- **Default to HTTPS** for GitHub remotes and clones (`https://github.com/...`), not SSH.
+- **Read an issue** with:
+  ```bash
+  gh issue view <num> --json title,body,labels,state,comments
+  ```
+  Plain `gh issue view <num>` is deprecated for programmatic use — always pass `--json` with the fields you need so output is stable and parseable.
+- When work is deferred or out of scope, **open a new gh issue** rather than leaving a TODO in code.
+
+## Parallel Issue Workflow
+
+When the user brings multiple gh issues to work on at once:
+
+1. **Propose parallelism first.** Don't silently start serial work — offer to run the issues in parallel and wait for user confirmation.
+2. **Orchestrator role.** Once approved, act as the orchestrator: spawn one subagent per issue (Agent tool). The orchestrator tracks progress and coordinates. Subagents branch from main, not from the orchestrator's working branch. The orchestrator passes each subagent the relevant gh issue number and any plan file path so the subagent has full context.
+3. **Subagents self-review.** Each subagent runs its own `/review` pass on its own changes before returning results. A subagent never returns unreviewed work.
+4. **No merging without user OK.** Subagents never merge their branches into main, and the orchestrator never merges a subagent's branch, before the user has explicitly approved it.
+5. **Final review covers the merged whole.** After all subagent branches are merged, the orchestrator runs a **complete review over the merged code** covering every subagent's contribution. No `git push` happens until that final combined review is done.
 
 ## Commit Messages
 

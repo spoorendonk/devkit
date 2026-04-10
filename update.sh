@@ -29,6 +29,12 @@ echo ""
 # Slash commands (symlink to submodule)
 echo "  Updating command symlinks..."
 mkdir -p .claude/commands
+
+# Prune symlinks for commands no longer in devkit (e.g. start.md after removal)
+for link in .claude/commands/*.md; do
+  [ -L "$link" ] && [ ! -e "$link" ] && rm "$link"
+done
+
 for cmd in "$SCRIPT_DIR/commands/"*.md; do
   name=$(basename "$cmd")
   rm -f ".claude/commands/$name"
