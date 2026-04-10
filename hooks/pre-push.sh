@@ -35,9 +35,10 @@ CODE_FILES=$(echo "$CHANGED_FILES" | grep -vE '^(\.devkit/|LICENSE|CHANGELOG)' |
 
 REVIEW_STALE=0
 CURRENT_HEAD=$(git rev-parse HEAD 2>/dev/null)
+STAMP="$(git rev-parse --absolute-git-dir)/.last-review"
 
-if [ -f ".devkit/.last-review" ]; then
-  LAST_REVIEWED=$(cat .devkit/.last-review | tr -d '[:space:]')
+if [ -f "$STAMP" ]; then
+  LAST_REVIEWED=$(cat "$STAMP" | tr -d '[:space:]')
   if [ "$LAST_REVIEWED" != "$CURRENT_HEAD" ]; then
     COMMITS_SINCE=$(git rev-list --count "$LAST_REVIEWED..$CURRENT_HEAD" 2>/dev/null || echo "?")
     echo ""
@@ -215,6 +216,6 @@ else
 fi
 
 # Clean up review stamp so next changes require a fresh review
-rm -f .devkit/.last-review
+rm -f "$STAMP"
 
 exit 0

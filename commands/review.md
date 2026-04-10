@@ -3,7 +3,7 @@ Run a multi-agent code review on all changes vs main. Follow these steps exactly
 ## Options (from $ARGUMENTS)
 
 - `--quick`: Do the review directly (no agents). Faster, less thorough.
-- `--stamp`: Skip the review entirely — just write the current HEAD to `.devkit/.last-review`. Use when you've already reviewed manually.
+- `--stamp`: Skip the review entirely — just write the current HEAD to the review stamp file. Use when you've already reviewed manually.
 
 If `--stamp` is passed, skip directly to the final step (mark review complete).
 
@@ -97,10 +97,10 @@ Ask the user which issues to address and how.
 
 ## Step 8: Mark review complete
 
-Write the current HEAD commit hash to `.devkit/.last-review`:
+Write the current HEAD commit hash to `.git/.last-review` (git's metadata dir — never tracked, works identically in consumer projects and the devkit source repo):
 
 ```bash
-git rev-parse HEAD > .devkit/.last-review
+git rev-parse HEAD > "$(git rev-parse --absolute-git-dir)/.last-review"
 ```
 
 This lets the pre-push hook and statusline know the review is up to date.
