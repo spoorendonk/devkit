@@ -20,6 +20,13 @@ Feature branches are optional for larger changes:
 - Keep branches short-lived. Merge to main quickly.
 - Use rebase or squash merge to maintain linear history — no merge commits on main.
 
+## Hooks Are Upstream
+
+Git hooks (`.git/hooks/*`, installed from `.devkit/hooks/`) and Claude Code hooks (entries in `.claude/settings.json`) are installed by devkit and treated as fixed. The real source lives upstream in the devkit submodule.
+
+- **Don't edit installed hooks in-project to work around a failure.** If a hook is wrong or too strict, raise it as a question or gh issue so the fix lands upstream in devkit and propagates to all projects. Local edits will be overwritten the next time `setup.sh` or `update.sh` runs.
+- **Never use `git push --no-verify` or `git commit --no-verify`** to bypass hooks unless the user explicitly asks for it. A failing hook is a signal — investigate and fix the root cause. If the hook itself is the problem, treat it as an upstream devkit issue, not something to silence locally.
+
 ## Issue Tracking
 
 GitHub Issues is the tracker. Use the `gh` CLI.
