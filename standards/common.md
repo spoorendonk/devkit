@@ -39,6 +39,15 @@ GitHub Issues is the tracker. Use the `gh` CLI.
   Plain `gh issue view <num>` is deprecated for programmatic use — always pass `--json` with the fields you need so output is stable and parseable.
 - When work is deferred or out of scope, **open a new gh issue** rather than leaving a TODO in code.
 
+### Writing Issues
+
+Issues get picked up later in fresh sessions, often by a different agent with no access to the author's machine. Write them to be picked up cold:
+
+- **Self-contained.** The body must carry all the context an agent needs: problem statement, motivation, relevant background, acceptance criteria, and reproduction steps if applicable. Don't assume the reader has the current conversation.
+- **No local references.** Do not link to local file paths, local code repos, or machine-specific locations (e.g. `/home/user/...`, `~/code/foo/bar.py`, "see my other checkout"). These are dead links in a fresh session.
+- **Prefer stable external links.** GitHub permalinks (repo/file/line), paper URLs, RFCs, and official docs are durable and reviewable from anywhere.
+- **Be vague about local code context.** If related work lives in a nearby local repo, describe the concept rather than the path, and hint that the agent can search under `..`, `../..`, or `~/code/` to locate it.
+
 ## Parallel Issue Workflow
 
 When the user brings multiple gh issues to work on at once:
