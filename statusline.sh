@@ -114,7 +114,7 @@ if git -C "$cwd" rev-parse --git-dir > /dev/null 2>&1; then
     current_head=$(git -C "$cwd" rev-parse HEAD 2>/dev/null)
     stamp="$(git -C "$cwd" rev-parse --absolute-git-dir 2>/dev/null)/.last-review"
     if [ -f "$stamp" ]; then
-        last_reviewed=$(cat "$stamp" | tr -d '[:space:]')
+        last_reviewed=$(tr -d '[:space:]' < "$stamp")
         if [ "$last_reviewed" = "$current_head" ]; then
             review_status="ok"
         else

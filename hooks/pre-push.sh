@@ -35,10 +35,12 @@ CODE_FILES=$(echo "$CHANGED_FILES" | grep -vE '^(\.devkit/|LICENSE|CHANGELOG)' |
 
 REVIEW_STALE=0
 CURRENT_HEAD=$(git rev-parse HEAD 2>/dev/null)
+# Per-worktree stamp: --absolute-git-dir gives .git/worktrees/<name> in linked
+# worktrees, so each worktree tracks its own review state independently.
 STAMP="$(git rev-parse --absolute-git-dir)/.last-review"
 
 if [ -f "$STAMP" ]; then
-  LAST_REVIEWED=$(cat "$STAMP" | tr -d '[:space:]')
+  LAST_REVIEWED=$(tr -d '[:space:]' < "$STAMP")
   if [ "$LAST_REVIEWED" != "$CURRENT_HEAD" ]; then
     COMMITS_SINCE=$(git rev-list --count "$LAST_REVIEWED..$CURRENT_HEAD" 2>/dev/null || echo "?")
     echo ""
