@@ -61,7 +61,8 @@ For non-trivial setup/update changes, run against a scratch consumer project:
 ```bash
 mkdir /tmp/devkit-smoketest && cd /tmp/devkit-smoketest
 git init && echo "scratch" > README.md && git add . && git commit -m "init"
-git submodule add /home/simon/code/my/devkit .devkit
+# -c protocol.file.allow=always: required since git 2.38.1 (CVE-2022-39253) for local-path submodules
+git -c protocol.file.allow=always submodule add /home/simon/code/my/devkit .devkit
 .devkit/setup.sh   # pick project type, walk the prompts
 # then: inspect generated CLAUDE.md, .claude/, .git/hooks/, pyproject.toml
 ```
