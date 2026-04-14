@@ -3,104 +3,76 @@ Run a multi-agent code review on all changes vs main. Follow these steps exactly
 ## Options (from $ARGUMENTS)
 
 - `--quick`: Do the review directly (no agents). Faster, less thorough.
-- `--stamp`: Skip the review entirely — just write the current HEAD to the review stamp file. Use when you've already reviewed manually.
+- `--stamp`: Write current HEAD to the review stamp file (use when already reviewed manually). Jumps straight to Step 8.
 
-If `--stamp` is passed, skip directly to the final step (mark review complete).
+## Step 1: Sync and determine diff base
 
-## Step 1: Sync with remote and determine diff base
+`git fetch origin main` (or `master`). Then:
 
-Run `git fetch origin main` (or `master` if main doesn't exist) to get the latest remote state.
-
-Determine the current branch:
 ```bash
 BRANCH=$(git symbolic-ref --short HEAD)
 ```
 
-**If on main/master:**
-- The diff base is `origin/main` (review unpushed commits).
-
-**If on a feature branch:**
-1. Check if local main is behind origin/main:
-   ```bash
-   git rev-list --count main..origin/main
-   ```
-2. If behind, tell the user how many commits main is behind and suggest updating main + rebasing. Ask before doing anything.
-3. If the user agrees:
-   - `git checkout main && git pull --ff-only origin main`
-   - `git checkout <feature-branch> && git rebase main`
-   - If rebase has conflicts, stop and let the user resolve them
-4. If the user declines, continue with the current state.
-5. The diff base is `main`.
+- **On main/master:** diff base is `origin/main` (review unpushed commits).
+- **On a feature branch:** diff base is `main`. If `git rev-list --count main..origin/main` shows main is behind, tell the user and offer to update + rebase. Ask before doing anything. On approval: `git checkout main && git pull --ff-only origin main && git checkout <branch> && git rebase main`. Stop on rebase conflicts.
 
 ## Step 2: Gather the diff
 
-Run `git diff <diff-base>...HEAD` to get all committed changes (where `<diff-base>` is `origin/main` on main, or `main` on a feature branch). Also run `git diff` and `git diff --cached` for any uncommitted changes. Combine these into the full changeset to review.
-
-If there are no changes vs the diff base, report that and stop.
+`git diff <diff-base>...HEAD` for committed changes, plus `git diff` and `git diff --cached` for uncommitted. Combine into the full changeset. If empty, report and stop.
 
 ## Step 3: Read the standards
 
-Read the project's standards files (the ones imported via `@.devkit/standards/` in CLAUDE.md) so reviewers know what conventions to check against.
+Read the project's standards files (those imported via `@.devkit/standards/` in CLAUDE.md).
 
 ## Step 4: Review
 
-**If `--quick`:** Do the review yourself directly — no agents. Read the full source files (not just the diff) for context. Produce findings and skip to step 6.
+**If `--quick`:** Review yourself directly — no agents. Read full source files (not just the diff). Produce findings; skip to Step 6.
 
-**Otherwise:** Launch **3** agents simultaneously using the Agent tool. Each agent does a **full, independent review** of everything — correctness, style, tests, cleanliness. They are not split by domain. Think of them as different team members each reviewing the same code.
+**Otherwise:** Launch **3** agents simultaneously. Each does a **full, independent review** of everything — they're not split by domain. Each agent receives:
 
-Each agent receives:
 - The full diff from Step 2
-- The relevant source files (not just the diff — read the full files for context)
+- The relevant source files (read full files for context, not just the diff)
 - The standards from Step 3
-- If the work is linked to a gh issue: the issue body, fetched via `gh issue view <num> --json title,body,labels,state,comments`
-- If a plan file guided the work (e.g. in `~/.claude/plans/`): its path, passed explicitly to each agent so the subagent session has it in context
+- If linked to a gh issue: the issue body via `gh issue view <num> --json title,body,labels,state,comments`
+- If a plan file guided the work (e.g. in `~/.claude/plans/`): its path
 
 Review for:
-- **Issue-spec adherence.** If the branch or PR is linked to a gh issue, verify the implementation actually matches what the issue asked for.
-- **Plan adherence.** If a plan was written for this work, verify the implementation follows it. Divergences from the plan that weren't re-negotiated with the user are major findings.
-- **Scope completeness.** Everything in the issue spec *and* the plan must be implemented, or explicitly deferred via a newly opened gh issue. No silent TODOs, no "will fix later" stubs, no partial implementations.
-- **No shortcut implementations.** Reject "simple placeholder now, do it properly later" work. The first implementation must be the best one — call this out as a major finding if spotted.
-- **Refactoring opportunities.** Dead code, duplication, complexity, weak abstractions.
-- **Performance bottlenecks.** Critical: most of our code is solvers. Look hard at hot loops, allocation in inner loops, asymptotic complexity, unnecessary copies, and algorithmic choices. Flag perf concerns as major even when code is "correct".
+
+- **Issue-spec adherence.** Implementation must match the linked gh issue.
+- **Plan adherence.** Divergences from a written plan that weren't re-negotiated are findings.
+- **Don't leave stuff on the table.** Every requirement in the issue and the plan must be implemented. No silent TODOs or stubs. A *better* solution than what the spec describes is fine — taking it is encouraged — but you cannot drop parts of the spec. (Genuinely substantial scope cuts can be deferred via a new gh issue, but this should be rare — don't suggest deferring small things.)
+- **Performance bottlenecks.** Most code is solvers — look hard at hot loops, allocations, asymptotic complexity, copies, algorithmic choices. Flag even when "correct".
+- Refactoring opportunities (dead code, duplication, weak abstractions).
 - Logic bugs, edge cases, error handling gaps.
-- Adherence to project standards (naming, style, conventions).
-- Test coverage gaps and test quality.
-- Anything else that looks wrong or could be improved.
+- Project standards (naming, style, conventions).
+- Test coverage and quality.
 
-Each agent returns a structured list of findings with: file, line, issue, severity (nit vs major), and suggested fix.
+**Reviewers do not edit files.** The orchestrator is the sole writer — this prevents the 3 parallel reviewers from racing on the shared working tree. Each agent returns a structured list of findings; for every finding it includes a `disposition`:
 
-## Step 5: Consolidate findings
+- `confident-fix`: the agent is confident in the fix. Must include a complete patch (file, exact `old_string` and `new_string`, or unified diff) the orchestrator can apply mechanically. Use for both small (typos, naming, missing types) and large (logic bugs, perf issues, refactors with a clear right answer) fixes.
+- `uncertain`: architectural tradeoff, ambiguous requirement, missing context. Include the issue, why it matters, why uncertain, and the options as the agent sees them.
 
-After all 3 agents complete, act as the orchestrator:
-1. Merge all findings from the 3 reviewers
-2. Deduplicate — issues flagged by multiple reviewers have higher confidence
-3. Resolve contradictions between reviewers (if reviewer A says "rename this" and reviewer B says "the name is fine", use judgment)
-4. Categorize each finding as:
-  - **Nit**: small fix that can be applied automatically (typos, naming, simple refactors, missing type hints)
-  - **Major**: requires human decision (logic changes, architectural concerns, ambiguous tradeoffs)
+Each finding also has: file, line, issue, why it matters.
 
-## Step 6: Auto-fix nits
+## Step 5: Consolidate and apply fixes
 
-Apply all nit fixes directly. After applying, run the test suite to make sure nothing broke. If tests pass, create a commit with message "fix: address review nits".
+1. **Merge findings** from all 3 reviewers. Deduplicate (multi-flagged = higher confidence).
+2. **Apply `confident-fix` patches** sequentially. If two patches touch the same lines and disagree, do not apply either — reclassify both as `uncertain` and surface the conflict to the user.
+3. **Resolve uncertain findings the orchestrator itself can confidently fix** — apply those too rather than escalating.
+4. **Resolve cross-reviewer contradictions** with judgment (e.g. reviewer A says "rename this", reviewer B says "name is fine" — pick one).
 
-If tests fail after fixes, revert the nit fixes and reclassify them as major.
+## Step 6: Run tests and commit
 
-## Step 7: Present major issues
+Run the test suite. If green, commit as `fix: address review findings`. If tests fail, identify the offending patch, revert just that patch, and reclassify it as `uncertain`. Re-run tests; commit when green.
 
-Present remaining major issues to the user in a clear list:
-- File and line number
-- What the issue is
-- Why it matters
-- Suggested approach (but don't implement without user approval)
+## Step 7: Present the uncertain ones
 
-Ask the user which issues to address and how.
+Present the remaining uncertain findings to the user. Wait for the user's call before touching them.
 
 ## Step 8: Mark review complete
-
-Write the current HEAD commit hash to `.git/.last-review` (git's metadata dir — never tracked, works identically in consumer projects and the devkit source repo):
 
 ```bash
 git rev-parse HEAD > "$(git rev-parse --absolute-git-dir)/.last-review"
 ```
 
-This lets the pre-push hook and statusline know the review is up to date.
+This lets the pre-push hook and statusline know the review is up to date. After the next push, per `common.md` Git Workflow, close any resolved gh issues with `gh issue close <num> -c "..."` and delete the feature branch (if one was used).

@@ -91,7 +91,7 @@ plan (non-trivial) → implement → test → /review → push to main
 - **Plan** — For non-trivial work, enter plan mode and align on approach before coding.
 - **Implement** — Write code. Hooks auto-format and type-check on every save.
 - **Test** — Run tests locally.
-- **`/review`** — Multi-agent review pipeline. Nits are auto-fixed; major issues are presented for decision.
+- **`/review`** — Multi-agent review pipeline. Reviewers fix what they're confident about; uncertain findings are escalated to the user.
 - **Push** — Pre-push hook runs tests, linters, and checks review status.
 
 ### Git conventions
