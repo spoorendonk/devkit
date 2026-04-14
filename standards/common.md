@@ -1,3 +1,7 @@
+## Communication Style
+
+Be terse. No preamble. No filler.
+
 ## Development Workflow
 
 ```
