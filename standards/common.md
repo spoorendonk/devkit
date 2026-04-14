@@ -56,7 +56,7 @@ Issues get picked up later in fresh sessions, often by a different agent with no
 When the user brings multiple gh issues to work on at once:
 
 1. **Propose parallelism first.** Offer it explicitly and wait for confirmation — don't silently start serial work.
-2. **Orchestrator role.** Spawn one subagent per issue (Agent tool). Subagents branch from main, not from the orchestrator's working branch. Pass each subagent its gh issue number and any plan file path.
+2. **Orchestrator role.** Spawn one subagent per issue (Agent tool with `isolation: "worktree"`). Subagents branch from main, not from the orchestrator's working branch, and work in their own git worktree. Pass each subagent its gh issue number and any plan file path.
 3. **Subagents self-review** per the Agent Self-Review rule above. Subagents commit locally in their worktree and **do not push** — worktrees share `.git`, so the orchestrator sees their commits via `git log <branch>` with no network round-trip.
 4. **No merging without user OK.** Subagents never merge into main; the orchestrator never merges a subagent's branch without explicit user approval.
 5. **Final combined review, then push.** The orchestrator merges all approved branches into local main, runs `/review` over the merged result, and only then runs `git push origin main`. No pushes — of main or feature branches — happen before that final review.
