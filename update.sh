@@ -46,6 +46,9 @@ ln -sf CLAUDE.md AGENTS.md
 
 # Git hooks
 echo "  Updating git hooks..."
+# resolve-venv.sh is a helper sourced by pre-commit.sh, pre-push.sh and
+# post-tool-format.sh; install it alongside so `source $(dirname $0)/resolve-venv.sh` works.
+install_hook resolve-venv.sh resolve-venv.sh
 install_hook pre-commit pre-commit.sh
 install_hook pre-push pre-push.sh
 install_hook commit-msg commit-msg.sh
