@@ -112,7 +112,7 @@ else
       rm -rf build
       if cmake -B build && cmake --build build -j"$(nproc 2>/dev/null || echo 4)"; then
         if command -v ctest &>/dev/null; then
-          if ! ctest --test-dir build --output-on-failure -j"$(nproc 2>/dev/null || echo 4)"; then
+          if ! GTEST_BRIEF=1 ctest --test-dir build --output-on-failure --progress -j"$(nproc 2>/dev/null || echo 4)"; then
             BUILD_FAILED=1
           fi
         fi

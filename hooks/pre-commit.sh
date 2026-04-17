@@ -71,7 +71,7 @@ TESTS_FAILED=0
 # Only run C++ tests if C++ files were staged
 if [ -n "$CPP_FILES" ] && [ -d "build" ] && command -v ctest &>/dev/null; then
   echo "Running C++ tests..."
-  if ! ctest --test-dir build --output-on-failure -j"$(nproc 2>/dev/null || echo 4)"; then
+  if ! GTEST_BRIEF=1 ctest --test-dir build --output-on-failure --progress -j"$(nproc 2>/dev/null || echo 4)"; then
     echo "FAILED: C++ tests failed."
     TESTS_FAILED=1
   fi
