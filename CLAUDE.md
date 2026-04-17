@@ -10,7 +10,7 @@ Nothing in this repo is "applied" to itself the way it would be in a consumer pr
 - `hooks/` — git hooks (`pre-commit.sh`, `pre-push.sh`, `commit-msg.sh`), Claude Code hooks (`post-tool-format.sh`, `check-branch-create.sh`, `check-venv.sh`), and a shared helper (`resolve-venv.sh`) sourced by several of the above.
 - `standards/` — coding standards (`common.md`, `cpp.md`, `python.md`, `nanobind.md`). `cpp.md` and `python.md` import `@common.md`; `nanobind.md` imports both. Language templates in `templates/CLAUDE.md.*.template` import from `@.devkit/standards/` — that path resolves correctly in downstream projects, not here.
 - `templates/` — `CLAUDE.md` templates (one per project type) and `settings.json.template` copied/merged into downstream projects at setup time.
-- `config/` — shared tool configs (`.clang-format`, `.clang-tidy`, `pyproject.toml.template`).
+- `config/` — shared tool configs (`.clang-format`, `.clang-tidy`, `.clangd`, `pyproject.toml.template`).
 - `setup.sh` — interactive installer that bootstraps a new consumer project (adds submodule, generates CLAUDE.md from template, installs hooks, symlinks commands, merges `pyproject.toml`).
 - `update.sh` — non-interactive updater for existing consumer projects (refreshes command symlinks, reinstalls hooks, jq-merges `settings.json`).
 - `statusline.sh` — Claude Code statusline script.
@@ -43,13 +43,13 @@ No build. Syntax-check the shell scripts:
 for f in setup.sh update.sh statusline.sh hooks/*.sh; do bash -n "$f" || exit 1; done
 ```
 
-The `pyproject.toml` merge logic in `setup.sh` has non-trivial semantics. When changing it, verify against a realistic fixture in `/tmp` and parse with `python3 -c "import tomllib; tomllib.load(open('pyproject.toml','rb'))"`. Cover idempotency (re-run 3 times, hash should be stable) and TOML array-of-tables (`[[tool.mypy.overrides]]` must survive the merge — devkit does not own array-of-tables, only single-bracket `[tool.ruff*]` and `[tool.mypy*]`).
+The `pyproject.toml` merge logic in `setup.sh` has non-trivial semantics. When changing it, verify against a realistic fixture in `/tmp` and parse with `python3 -c "import tomllib; tomllib.load(open('pyproject.toml','rb'))"`. Cover idempotency (re-run 3 times, hash should be stable) and TOML array-of-tables (`[[tool.mypy.overrides]]` must survive the merge — devkit does not own array-of-tables, only single-bracket `[tool.ruff*]`, `[tool.mypy*]`, and `[tool.pytest*]`).
 
 ## When editing this repo
 
 - **Adding/removing a slash command.** Create or delete a file in `commands/`. `setup.sh` and `update.sh` both loop over `commands/*.md`, and both prune orphaned symlinks in downstream projects. No script edits needed.
 - **Adding a git hook.** Both `setup.sh` and `update.sh` hardcode the install list via `install_hook` calls. Update both.
-- **Extending the `pyproject.toml` merge.** The awk regex in `setup.sh` currently owns `[tool.ruff*]` and `[tool.mypy*]` (single-bracket). If `config/pyproject.toml.template` grows a new `[tool.X]` section, extend the regex. A `NOTE` comment at the merge block points at this.
+- **Extending the `pyproject.toml` merge.** The awk regex in `setup.sh` currently owns `[tool.ruff*]`, `[tool.mypy*]`, and `[tool.pytest*]` (single-bracket). If `config/pyproject.toml.template` grows a new `[tool.X]` section, extend the regex. A `NOTE` comment at the merge block points at this.
 - **Editing `templates/settings.json.template`.** `update.sh` uses `jq` to union `permissions.allow`/`deny` and merge `hooks` by matcher (template wins on matcher collisions, user-only entries preserved). Reason about this merge behavior when changing the template.
 - **`.claude/settings.json` in this repo diverges from the template.** It uses repo-root paths (`bash hooks/post-tool-format.sh`) instead of `.devkit/hooks/...` because this repo is self-hosted. Do not sync it from `templates/settings.json.template`.
 - **`.claude/commands/review.md` is a symlink** to `../../commands/review.md`. Edit `commands/review.md` directly.

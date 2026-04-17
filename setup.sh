@@ -173,10 +173,12 @@ fi
 if [ "$TEMPLATE" = "cpp" ] || [ "$TEMPLATE" = "cpp-python" ]; then
   offer_symlink .clang-format
   offer_symlink .clang-tidy
+  offer_symlink .clangd
 fi
 
 # Python config (pyproject.toml): merge devkit-owned tool sections into any existing file.
-# NOTE: if pyproject.toml.template gains new [tool.X] sections, extend the awk regex below.
+# NOTE: devkit currently owns [tool.ruff*], [tool.mypy*], and [tool.pytest*] single-bracket tables.
+# If pyproject.toml.template gains a new [tool.X] section, extend the awk regex below.
 if [ "$TEMPLATE" = "python" ] || [ "$TEMPLATE" = "cpp-python" ]; then
   TEMPLATE_PYPROJECT="$SCRIPT_DIR/config/pyproject.toml.template"
   # strip_template_header: emit the template without its leading `# Add these sections` comment
@@ -191,11 +193,11 @@ if [ "$TEMPLATE" = "python" ] || [ "$TEMPLATE" = "cpp-python" ]; then
     echo "  Merging devkit tool sections into existing pyproject.toml..."
     cp pyproject.toml pyproject.toml.devkit-bak
     echo "  Backup written to pyproject.toml.devkit-bak (restore with: mv pyproject.toml.devkit-bak pyproject.toml)"
-    # Strip any existing [tool.ruff*] and [tool.mypy*] single-bracket tables.
+    # Strip any existing [tool.ruff*], [tool.mypy*], and [tool.pytest*] single-bracket tables.
     # Array-of-tables ([[tool.mypy.overrides]]) are intentionally preserved — users own those.
     awk '
       /^\[/ {
-        if ($0 ~ /^\[tool\.(ruff|mypy)(\.|])/) { skip = 1 }
+        if ($0 ~ /^\[tool\.(ruff|mypy|pytest)(\.|])/) { skip = 1 }
         else { skip = 0 }
       }
       !skip { print }
@@ -209,7 +211,7 @@ if [ "$TEMPLATE" = "python" ] || [ "$TEMPLATE" = "cpp-python" ]; then
     } > pyproject.toml.merged
     mv pyproject.toml.merged pyproject.toml
     rm -f pyproject.toml.tmp
-    echo "  Merged. User's [project]/[build-system]/other tables preserved; [tool.ruff*] and [tool.mypy] refreshed from devkit."
+    echo "  Merged. User's [project]/[build-system]/other tables preserved; [tool.ruff*], [tool.mypy*], and [tool.pytest*] refreshed from devkit."
   fi
 fi
 

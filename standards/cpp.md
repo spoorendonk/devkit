@@ -17,3 +17,8 @@
 
 - Test files: `<module>_test.cpp` in `tests/`.
 - Name tests descriptively: `TEST_F(SolverTest, ReturnsOptimalForFeasibleInput)`.
+- Terse output: `GTEST_BRIEF=1` prints only failures, `ctest --progress` collapses the running list, `CMAKE_INSTALL_MESSAGE=LAZY` suppresses install chatter. Don't remove these.
+
+## LSP
+
+Install `clangd-lsp@claude-plugins-official` plus `clangd` itself (`apt install clangd` or from LLVM). Devkit ships `.clangd` pointing at `build/compile_commands.json` (produced by `CMAKE_EXPORT_COMPILE_COMMANDS ON`). Prefer `LSP` tool queries (`goToDefinition`, `hover`, `documentSymbol`) over `Read` for symbol questions.

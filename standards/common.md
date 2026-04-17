@@ -2,6 +2,16 @@
 
 Be terse. No preamble. No filler.
 
+## Code Navigation
+
+Prefer narrow queries over full-file reads:
+
+1. **LSP** for symbol questions. `goToDefinition`, `hover`, `documentSymbol`, `workspaceSymbol` answer "where is X / what's its signature" in a few tokens. Use before `Read`.
+2. **Grep with `head_limit` (small) + `-n`** to locate lines. Start with `head_limit: 20`; raise only if inconclusive.
+3. **Read with `offset`/`limit`** to fetch a slice around the hit. Full-file `Read` is fine for files under ~200 lines or when structure matters.
+
+Know the symbol → LSP. Know a string, not its location → Grep. Full-file Read is the last mile.
+
 ## Development Workflow
 
 ```

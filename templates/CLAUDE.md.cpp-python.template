@@ -1,5 +1,7 @@
 @.devkit/standards/nanobind.md
 
+Navigation: LSP → narrow Grep → sliced Read. See `standards/common.md` "Code Navigation".
+
 # Project: __PROJECT_NAME__
 
 ## Build & Test
@@ -9,9 +11,9 @@ rm -rf build
 ```
 
 ```build
-cmake -B build && cmake --build build -j$(nproc)
+cmake -B build -DCMAKE_INSTALL_MESSAGE=LAZY && cmake --build build -j$(nproc)
 ```
 
 ```test
-ctest --test-dir build --output-on-failure -j$(nproc) && pytest --tb=short -q
+GTEST_BRIEF=1 ctest --test-dir build --output-on-failure --progress -j$(nproc) && pytest
 ```

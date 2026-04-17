@@ -1,9 +1,11 @@
 @.devkit/standards/python.md
 
+Navigation: LSP → narrow Grep → sliced Read. See `standards/common.md` "Code Navigation".
+
 # Project: __PROJECT_NAME__
 
 ## Build & Test
 
 ```test
-pytest --tb=short -q
+pytest
 ```

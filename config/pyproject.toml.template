@@ -3,6 +3,7 @@
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+output-format = "concise"
 
 [tool.ruff.lint]
 select = [
@@ -21,8 +22,15 @@ select = [
 [tool.ruff.lint.mccabe]
 max-complexity = 10
 
+[tool.pytest.ini_options]
+addopts = "-q --tb=short --no-header"
+
 [tool.mypy]
 strict = true
 python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
+pretty = false
+show_error_context = false
+show_column_numbers = true
+error_summary = true
