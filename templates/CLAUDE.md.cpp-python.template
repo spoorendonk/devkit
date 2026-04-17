@@ -1,6 +1,6 @@
 @.devkit/standards/nanobind.md
 
-Navigation: LSP → narrow Grep → sliced Read. See `standards/common.md` "Code Navigation".
+Navigation: LSP → narrow Grep → sliced Read. See `.devkit/standards/common.md` "Code Navigation".
 
 # Project: __PROJECT_NAME__
 
