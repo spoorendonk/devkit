@@ -2,12 +2,21 @@
 # PreToolUse hook for Bash commands.
 # If a .venv exists in the project but VIRTUAL_ENV is not set,
 # blocks bare python/pip commands and tells Claude to use the venv path.
+#
+# If the project has no Python infrastructure (no pyproject.toml / setup.py /
+# setup.cfg / requirements.txt), the hook passes — Python commands are assumed
+# to be standalone utilities that don't need a project-level venv.
 INPUT=$(cat)
 
 # Only check if the command involves Python
 if echo "$INPUT" | grep -qE '(^|\s)(python3?(\.[0-9]+)?|pip3?|pytest|mypy|dmypy|ruff)\s'; then
   # Already in a venv — all good
   [ -n "$VIRTUAL_ENV" ] && exit 0
+
+  # No Python project metadata — treat as standalone utility, skip venv check
+  if [ ! -f "pyproject.toml" ] && [ ! -f "setup.py" ] && [ ! -f "setup.cfg" ] && [ ! -f "requirements.txt" ]; then
+    exit 0
+  fi
 
   # Look for a venv in the project
   VENV_DIR=""
@@ -25,7 +34,7 @@ if echo "$INPUT" | grep -qE '(^|\s)(python3?(\.[0-9]+)?|pip3?|pytest|mypy|dmypy|
       exit 2
     fi
   else
-    # No venv found at all
+    # Python project but no venv found
     echo "BLOCK: No virtualenv found. Create one before running Python commands:"
     echo "  python3 -m venv .venv"
     echo "  uv venv"
