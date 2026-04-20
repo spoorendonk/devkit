@@ -12,6 +12,8 @@ Prefer narrow queries over full-file reads:
 
 Know the symbol → LSP. Know a string, not its location → Grep. Full-file Read is the last mile.
 
+When a shell-level search is genuinely needed (piping, scripting), use `rg` — never `grep`.
+
 ## Development Workflow
 
 ```
