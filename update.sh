@@ -21,10 +21,25 @@ echo "  devkit update"
 echo "  ─────────────────────"
 echo ""
 
-# Pull latest submodule
-echo "  Pulling latest submodule..."
-git submodule update --remote .devkit
-echo ""
+# Pull the submodule and re-exec self if the pull brought in a new update.sh.
+# Without the re-exec, bash keeps running the old parsed-in-memory script body,
+# so any new hook-install line or symlink-sync step added in the pulled range
+# silently no-ops until the user runs update.sh a second time. DEVKIT_UPDATE_REEXECED
+# guards against loops if the hash keeps changing for some reason.
+if [ -z "${DEVKIT_UPDATE_REEXECED:-}" ]; then
+  echo "  Pulling latest submodule..."
+  UPDATE_SH_HASH_BEFORE=$(md5sum "$0" | awk '{print $1}')
+  git submodule update --remote .devkit
+  UPDATE_SH_HASH_AFTER=$(md5sum "$0" | awk '{print $1}')
+  echo ""
+
+  if [ "$UPDATE_SH_HASH_BEFORE" != "$UPDATE_SH_HASH_AFTER" ]; then
+    echo "  update.sh changed in this pull — re-executing with new logic."
+    echo ""
+    export DEVKIT_UPDATE_REEXECED=1
+    exec "$0" "$@"
+  fi
+fi
 
 # Slash commands (symlink to submodule)
 echo "  Updating command symlinks..."
@@ -43,6 +58,34 @@ done
 
 # AGENTS.md symlink
 ln -sf CLAUDE.md AGENTS.md
+
+# Config symlinks: if the project has opted into devkit-shared configs (has at
+# least one existing symlink into .devkit/config/, e.g. .clang-format from
+# setup.sh), create symlinks for any new files devkit has added since setup
+# (e.g. .clangd added later). Don't touch regular files or differently-targeted
+# symlinks — those are the user's own customizations.
+echo "  Syncing config symlinks..."
+uses_devkit_config=0
+for f in .*; do
+  [ -L "$f" ] || continue
+  case "$(readlink "$f")" in
+    .devkit/config/*) uses_devkit_config=1; break ;;
+  esac
+done
+
+if [ "$uses_devkit_config" = "1" ]; then
+  for cfg in "$SCRIPT_DIR/config/".*; do
+    [ -f "$cfg" ] || continue
+    name=$(basename "$cfg")
+    case "$name" in
+      .|..|*.template) continue ;;
+    esac
+    if [ ! -e "$name" ] && [ ! -L "$name" ]; then
+      ln -s ".devkit/config/$name" "$name"
+      echo "    linked $name -> .devkit/config/$name"
+    fi
+  done
+fi
 
 # Git hooks
 echo "  Updating git hooks..."
